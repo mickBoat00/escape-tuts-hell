@@ -31,6 +31,7 @@ const UploadDropZone = ({
         // Accept configuration: Exhaustive list for cross-browser compatibility
         accept: {
             "audio/mpeg": [".mp3"], // MP3
+            "audio/mpeg4": [".mp4"], // MP3
             "audio/x-m4a": [".m4a"], // M4A (iOS/Apple)
             "audio/wav": [".wav", ".wave"], // WAV
             "audio/x-wav": [".wav", ".wave"], // WAV (alternate MIME)
@@ -98,7 +99,7 @@ const UploadDropZone = ({
             <p className="text-base text-gray-600">or click to browse files</p>
             <div className="pt-2 space-y-1">
                 <p className="text-sm text-gray-500 font-medium">
-                Supports: MP3, WAV, M4A, FLAC, OGG, AAC, and more
+                Supports: MP3, MP4, WAV, M4A, FLAC, OGG, AAC, and more
                 </p>
                 <p className="text-sm text-gray-500 font-semibold">
                 Maximum file size: {Math.round(maxSize / (1024 * 1024))}MB
