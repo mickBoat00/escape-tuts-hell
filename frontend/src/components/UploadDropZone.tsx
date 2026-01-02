@@ -3,15 +3,16 @@ import { FileAudio, Upload } from 'lucide-react'
 import React, { useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 
+
+const MAXSIZE = 1 * (1024 ** 3)
+
 interface uploadDropZoneProps {
     onFileSelect: (file: File) => void
-    maxSize: number
     disabled: boolean
 }
 
 const UploadDropZone = ({
     onFileSelect, 
-    maxSize,
     disabled
 }: uploadDropZoneProps) => {
 
@@ -44,7 +45,7 @@ const UploadDropZone = ({
             "audio/3gpp": [".3gp"], // 3GP
             "audio/3gpp2": [".3g2"], // 3G2
         },
-        maxSize, // File size limit (validates before upload)
+        maxSize: MAXSIZE, // File size limit (validates before upload)
         maxFiles: 1, // Only allow single file selection
         disabled, // Disable dropzone during upload
         });
@@ -102,7 +103,7 @@ const UploadDropZone = ({
                 Supports: MP3, MP4, WAV, M4A, FLAC, OGG, AAC, and more
                 </p>
                 <p className="text-sm text-gray-500 font-semibold">
-                Maximum file size: {Math.round(maxSize / (1024 * 1024))}MB
+                Maximum file size: {Math.round(MAXSIZE / (1024 ** 3))}GB
                 </p>
             </div>
         </div>

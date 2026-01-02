@@ -172,4 +172,8 @@
     transform: translateY(-2px);
   }
 
+  .progress-emerald {
+    background: linear-gradient(90deg, rgb(16 185 129) 0%, rgb(45 212 191) 100%);
+  }
+
 }
