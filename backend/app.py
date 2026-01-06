@@ -15,8 +15,9 @@ from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-
 app = FastAPI(title="Podcast AI Backend")
+
+load_dotenv()
 
 origins = [
     os.environ["FRONTEND_URL"]
@@ -29,8 +30,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-load_dotenv()
 
 def create_presigned_url(bucket_name, object_name, content_type, expiration=3600):
     s3_client = boto3.client('s3',
