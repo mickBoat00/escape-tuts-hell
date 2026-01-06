@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import { ToastContainer, toast } from 'react-toastify';
+import axios from 'axios';
 
 import UploadDropZone from './UploadDropZone';
 import { estimateDurationFromSize, getAudioDuration } from '@/lib/audio-utils';
-import type { UploadStatus } from '@/lib/types';
+import type { UploadStatus, UploadButtonState } from '@/lib/types';
 import { Button } from './ui/button';
 import UploadProgress from './UploadProgress';
 
@@ -18,6 +19,7 @@ const TutorialUploader = () => {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
     const [error, setError] = useState<string | null>(null);
+    const [uploadBtnState, setUploadBtnState] = useState<UploadButtonState>("Start Upload");
 
     const handleFileSelect = async (file: File) => {
         setSelectedFile(file);
@@ -45,15 +47,63 @@ const TutorialUploader = () => {
         setUploadStatus("idle");
         setUploadProgress(0);
         setError(null);
+        setUploadBtnState("Start Upload")
     };
 
-    const handleUpload = () => {
+    const getS3SignUrl = async (file: File, fileDuration:number | undefined) => {
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+      const response = await axios.post(`${API_BASE_URL}/upload`, {
+          fileName: file.name,
+          fileSize: file.size,
+          fileDuration: fileDuration,
+          contentType: file.type
+      });
+
+      return response.data;
+    }
+
+    const pushFiletoS3 = async (file: File, presignedUrl: string) => {
+          const response = await axios.put(presignedUrl, file, {
+              headers: {
+                  'Content-Type': file.type || 'application/octet-stream',
+              },
+              transformRequest: [(data) => data], // Prevent axios from transforming the data
+              onUploadProgress: (progressEvent) => {
+                  if (progressEvent.total) {
+                      const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                      setUploadProgress(percentCompleted);
+                      console.log(`Upload progress: ${percentCompleted}%`);
+                  }
+              }
+          });
+
+          return response;
+    }
+
+    const handleUpload = async () => {
+        if (!selectedFile) return;
 
         try {
-            throw Error('It didnt work')
+            setUploadStatus("uploading");
+            setUploadProgress(0);
+
+            const data = await getS3SignUrl(selectedFile, fileDuration)
+
+            console.log(data)
+
+            if(data.url){
+              const uploadRes = await pushFiletoS3(selectedFile, data.url);
+              console.log('uploadRes', uploadRes)
+            }
+
+            setUploadProgress(100);
+            setUploadStatus("completed");
+            toast.success('File uploaded successfully!');
+            
         } catch (err) {
             console.error("Upload error:", err);
             setUploadStatus("error");
+            setUploadBtnState("Try Again")
 
             const errorMessage =
             err instanceof Error
@@ -61,14 +111,8 @@ const TutorialUploader = () => {
             : "Failed to upload file. Please try again.";
 
             setError(errorMessage);
-            toast.error(errorMessage)
-
+            toast.error(errorMessage);
         }
-        // setSelectedFile(null);
-        // setFileDuration(undefined);
-        // setUploadStatus("uploading");
-        // setUploadProgress(50);
-        
     };
 
 

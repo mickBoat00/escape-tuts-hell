@@ -4,3 +4,7 @@ export type UploadStatus =
   | "processing"
   | "completed"
   | "error";
+
+export type UploadButtonState =
+  | "Start Upload"
+  | "Try Again"
