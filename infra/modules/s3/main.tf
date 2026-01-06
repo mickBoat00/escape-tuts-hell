@@ -22,6 +22,16 @@ resource "aws_s3_bucket_policy" "public_policy" {
       Principal = "*"
       Action    = "s3:GetObject"
       Resource  = "${aws_s3_bucket.uploads.arn}/*"
+    }, 
+    {
+      Sid = "PublicWriteObject",
+      Effect = "Allow",
+      Principal = "*",
+      Action = [
+        "s3:PutObject",
+        "s3:PutObjectAcl"
+      ],
+      Resource = "${aws_s3_bucket.uploads.arn}/*"
     }]
   })
 }
@@ -33,7 +43,7 @@ resource "aws_s3_bucket_cors_configuration" "uploads_cors" {
     allowed_methods = var.cors_allowed_methods
     allowed_origins = var.cors_allowed_origins
     allowed_headers = ["*"]
-    expose_headers  = ["ETag"]
+    expose_headers  = ["ETag", "x-amz-server-side-encryption", "x-amz-request-id", "x-amz-id-2"]
     max_age_seconds = 3000
   }
 }
