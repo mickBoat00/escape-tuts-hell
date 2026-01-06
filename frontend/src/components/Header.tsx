@@ -1,5 +1,6 @@
 import { Sparkles } from 'lucide-react'
 import React from 'react'
+import { Link } from '@tanstack/react-router'
 import { Button } from './ui/button'
 
 const Header = () => {
@@ -27,9 +28,11 @@ const Header = () => {
           </div>
 
           <div className="flex items-center gap-2 lg:gap-3">
-            <Button className="cursor-pointer bg-white/95 text-emerald-600 hover:bg-white hover:scale-105 shadow-lg font-semibold transition-all duration-300">
-              Tutorials
-            </Button>
+            <Link to="/tutorials" className="[&.active]:font-bold">
+              <Button className="cursor-pointer bg-white/95 text-emerald-600 hover:bg-white hover:scale-105 shadow-lg font-semibold transition-all duration-300">
+                Tutorials
+              </Button>
+            </Link>
           </div>
 
         </div>
