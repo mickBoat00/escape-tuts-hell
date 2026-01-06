@@ -7,7 +7,7 @@ terraform {
   }
 
   backend "s3" {
-    key    = "podcast-ai-saas/terraform.tfstate"
+    key    = "tutorials_upload/terraform.tfstate"
   }
 }
 
