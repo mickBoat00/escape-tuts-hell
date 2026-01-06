@@ -1,8 +1,10 @@
+import os
+import logging
+import boto3
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-import logging
-import boto3
 from botocore.exceptions import ClientError
 
 from dotenv import load_dotenv
@@ -40,6 +42,6 @@ class FileDataRequest(BaseModel):
 def presigned_token(request: FileDataRequest):
     logging.info(f"fileName: {request.filename} fileSize: {request.fileSize} fileDuration: {request.fileDuration}")
     return create_presigned_post(
-        bucket_name = "podcast-ai-blob-storage-305870070165",
+        bucket_name = os.environ['S3_BUCKET_NAME'],
         object_name = "uploads/"
     )
