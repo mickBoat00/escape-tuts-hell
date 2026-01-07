@@ -14,10 +14,15 @@ from pydantic import BaseModel
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pymongo import AsyncMongoClient
 
 app = FastAPI(title="Podcast AI Backend")
 
 load_dotenv()
+
+client = AsyncMongoClient(os.environ["MONGODB_URI"])
+db = client[os.environ["MONGODB_DB"]]
+tutorials_collection = db["tutorials"]
 
 origins = [
     os.environ["FRONTEND_URL"]
@@ -61,9 +66,10 @@ class FileDataRequest(BaseModel):
 
 
 @app.post("/upload")
-def presigned_token(request: FileDataRequest):
+async def presigned_token(request: FileDataRequest):
     logging.info(f"fileName: {request.fileName} fileSize: {request.fileSize} fileDuration: {request.fileDuration}")
 
+    file_extension = os.path.splitext(request.fileName)[1]
     object_name = f"uploads/{request.fileName}"
 
     url = create_presigned_url(
@@ -75,4 +81,30 @@ def presigned_token(request: FileDataRequest):
     if url is None:
         raise HTTPException(status_code=500, detail="Failed to generate presigned URL")
     
-    return {"url": url}
+    s3_url = f"https://{os.environ['S3_BUCKET_NAME']}.s3.{os.environ['AWS_REGION']}.amazonaws.com/{object_name}"
+    
+    file_format = file_extension.lstrip('.') if file_extension else request.contentType.split('/')[-1]
+    
+    tutorial_data = {
+        "inputUrl": s3_url,
+        "fileName": request.fileName,
+        "fileSize": request.fileSize,
+        "fileDuration": request.fileDuration,
+        "fileFormat": file_format,
+        "mimeType": request.contentType,
+        "status": "uploaded"
+    }
+    
+    try:
+        result = await tutorials_collection.insert_one(tutorial_data)
+        tutorial_id = str(result.inserted_id)
+        logging.info(f"Created tutorial with ID: {tutorial_id}")
+    except Exception as e:
+        logging.error(f"Failed to create tutorial in database: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create tutorial record")
+    
+    return {
+        "url": url,
+        "tutorialId": tutorial_id,
+        "s3Key": object_name
+    }

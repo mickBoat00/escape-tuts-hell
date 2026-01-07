@@ -2,7 +2,6 @@ import { createRootRoute, Link, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Button } from '../components/ui/button'
 import { Sparkles } from 'lucide-react'
-import HeroSection from '@/components/HeroSection'
 
 const RootLayout = () => (
   <>
@@ -41,7 +40,6 @@ const RootLayout = () => (
         </div>
       </div>
     </header>
-    {/* <HeroSection/> */}
     <Outlet />
     <TanStackRouterDevtools />
   </>

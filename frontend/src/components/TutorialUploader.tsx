@@ -8,7 +8,11 @@ import type { UploadStatus, UploadButtonState } from '@/lib/types';
 import { Button } from './ui/button';
 import UploadProgress from './UploadProgress';
 
+import { useNavigate } from '@tanstack/react-router'
+
 const TutorialUploader = () => {
+
+    const navigate = useNavigate()
 
     const [disabled, setDisabled] = useState(false)
     //  Upload state
@@ -89,16 +93,20 @@ const TutorialUploader = () => {
 
             const data = await getS3SignUrl(selectedFile, fileDuration)
 
-            console.log(data)
+            let tutorialId = data.tutorialId;
 
             if(data.url){
-              const uploadRes = await pushFiletoS3(selectedFile, data.url);
-              console.log('uploadRes', uploadRes)
+              await pushFiletoS3(selectedFile, data.url);
             }
 
             setUploadProgress(100);
             setUploadStatus("completed");
             toast.success('File uploaded successfully!');
+
+            navigate({ 
+              to: '/tutorials/$tutorialId',
+              params: { tutorialId },
+            })
             
         } catch (err) {
             console.error("Upload error:", err);
