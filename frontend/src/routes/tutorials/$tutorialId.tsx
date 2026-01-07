@@ -1,3 +1,4 @@
+import ProcessingFlow from '@/components/ProcessingFlow';
 import TutorialStatusCard from '@/components/TutorialStatusCard';
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,17 +62,19 @@ function RouteComponent() {
       <div className="grid gap-6">
         <TutorialStatusCard/>
 
-        <Card className="border-destructive">
-            <CardHeader>
-              <CardTitle className="text-destructive">Error</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm">This is not a coding tutorial</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                  Failed at: Verify coding tutorial step
-                </p>
-            </CardContent>
-          </Card>
+        <ProcessingFlow />
+
+          {/* <Card className="border-destructive">
+              <CardHeader>
+                <CardTitle className="text-destructive">Error</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm">This is not a coding tutorial</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                    Failed at: Verify coding tutorial step
+                  </p>
+              </CardContent>
+            </Card> */}
       </div>
     </div>
   </>
