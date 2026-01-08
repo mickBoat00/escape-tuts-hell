@@ -4,7 +4,8 @@ import logging
 import boto3
 from datetime import datetime
 
-from fastapi import FastAPI, status
+from fastapi import FastAPI, status, Path
+from bson import ObjectId
 
 from botocore.exceptions import ClientError
 from botocore.config import Config
@@ -122,3 +123,22 @@ async def list_tutorials(skip: int = 0, limit: int = 10):
     except Exception as e:
         logging.error(f"Failed to retrieve tutorials: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve tutorials")
+
+
+@app.get("/tutorials/{tutorial_id}", response_model=TutorialModel, status_code=status.HTTP_200_OK)
+async def get_tutorial(tutorial_id: str = Path(..., description="The ID of the tutorial to retrieve")):
+    try:
+        if not ObjectId.is_valid(tutorial_id):
+            raise HTTPException(status_code=400, detail="Invalid tutorial ID format")
+        
+        tutorial = await tutorials_collection.find_one({"_id": ObjectId(tutorial_id)})
+        
+        if tutorial is None:
+            raise HTTPException(status_code=404, detail="Tutorial not found")
+            
+        return tutorial
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Failed to retrieve tutorial {tutorial_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve tutorial")
