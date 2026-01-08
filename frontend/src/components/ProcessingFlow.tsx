@@ -1,6 +1,7 @@
 import React from 'react'
 import PhaseCard from './PhaseCard'
 import { Badge, ChevronDown, FileText, Sparkles } from 'lucide-react'
+import FeatureItem from './FeatureItem'
 
 const ProcessingFlow = () => {
   return (
@@ -14,7 +15,7 @@ const ProcessingFlow = () => {
             progress={50}
             timeEstimate={"30 minutes"}
         />
-    
+
         <div className="flex items-center justify-center">
             <div className="flex items-center gap-2 text-muted-foreground">
                 <div className="h-px w-16 bg-border" />
@@ -27,11 +28,33 @@ const ProcessingFlow = () => {
             icon={Sparkles}
             title="Phase 2: AI Generation"
             description={"Generation different content from transcript"}
-            status={"completed"}
+            status={"running"}
             isActive={true}
         >
 
             <div className="space-y-3 pt-2">
+
+                <FeatureItem
+                  name={"Q&As"}
+                  description={"Question and Answers"}
+                  icon={FileText}
+                  isActive={true}
+                />
+
+                <FeatureItem
+                  name={"Q&As"}
+                  description={"Question and Answers"}
+                  icon={FileText}
+                  isActive={true}
+                />
+
+
+                <FeatureItem
+                  name={"Q&As"}
+                  description={"Question and Answers"}
+                  icon={FileText}
+                  isActive={false}
+                />
 
                 <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 text-center mt-6 border-2 border-emerald-200 shadow-lg">
                     <p className="text-sm text-gray-700 leading-relaxed">
