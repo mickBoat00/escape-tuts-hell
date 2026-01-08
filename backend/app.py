@@ -97,14 +97,10 @@ async def presigned_token(request: FileDataRequest):
             "createdAt": datetime.utcnow()
         }
         
-        # Validate with TutorialModel
-        tutorial_model = TutorialModel(**tutorial_data)
-        validated_data = tutorial_model.model_dump(by_alias=True, exclude={'_id'})
-        
-        logging.info(f"Tutorial data validated successfully")
+        TutorialModel(**tutorial_data).model_dump(by_alias=True)
         
         # Insert validated data into database
-        result = await tutorials_collection.insert_one(validated_data)
+        result = await tutorials_collection.insert_one(tutorial_data)
         tutorial_id = str(result.inserted_id)
         logging.info(f"Created tutorial with ID: {tutorial_id}")
         

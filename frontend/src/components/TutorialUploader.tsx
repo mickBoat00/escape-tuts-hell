@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import axios from 'axios';
 
 import UploadDropZone from './UploadDropZone';
@@ -127,7 +127,6 @@ const TutorialUploader = () => {
 
   return (
     <div className="space-y-6">
-        <ToastContainer />
         {!selectedFile && uploadStatus === "idle" && (
             <UploadDropZone
             onFileSelect={handleFileSelect}

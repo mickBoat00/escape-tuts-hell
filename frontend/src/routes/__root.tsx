@@ -2,6 +2,7 @@ import { createRootRoute, Link, Outlet } from '@tanstack/react-router'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Button } from '../components/ui/button'
 import { Sparkles } from 'lucide-react'
+import { ToastContainer } from 'react-toastify'
 
 const RootLayout = () => (
   <>
@@ -40,6 +41,7 @@ const RootLayout = () => (
         </div>
       </div>
     </header>
+    <ToastContainer />
     <Outlet />
     <TanStackRouterDevtools />
   </>
