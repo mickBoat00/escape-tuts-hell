@@ -63,6 +63,15 @@ module "backend_lambda" {
         "logs:PutLogEvents"
       ]
       Resource = "*"
+    },
+    {
+      Effect = "Allow"
+      Action = [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:AbortMultipartUpload"
+      ]
+      Resource = "${module.public_s3.bucket_arn}/*"
     }
   ]
 }
