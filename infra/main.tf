@@ -21,6 +21,12 @@ data "aws_ecr_image" "lambda_image" {
 }
 
 
+
+resource "aws_lambda_function_url" "example" {
+  function_name      = module.backend_lambda.function_name
+  authorization_type = "NONE"
+}
+
 module "backend_lambda" {
   source = "./modules/lambda"
 
@@ -34,8 +40,8 @@ module "backend_lambda" {
     MONGODB_URI = var.mongodb_uri
     MONGODB_DB = var.mongodb_db
     MONGODB_COLLECTION = var.mongodb_collection
-    S3_BUCKET_NAME=var.bucket_name
-    FRONTEND_URL=var.frontend_url
+    S3_BUCKET_NAME=module.public_s3.bucket_name
+    FRONTEND_URL="http://localhost:5174"
   }
 
   policy_statements = [
