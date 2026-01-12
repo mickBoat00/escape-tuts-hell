@@ -1,4 +1,3 @@
-
 import os
 import logging
 import boto3
@@ -17,7 +16,7 @@ from pymongo import AsyncMongoClient
 
 from models import FileDataRequest, TutorialModel
 
-from typing import List
+from typing import List, Optional
 
 from mangum import Mangum
 
@@ -25,9 +24,21 @@ app = FastAPI(title="Podcast AI Backend")
 
 load_dotenv()
 
-client = AsyncMongoClient(os.environ["MONGODB_URI"])
-db = client[os.environ["MONGODB_DB"]]
-tutorials_collection = db["tutorials"]
+# Don't create client at module level
+client: Optional[AsyncMongoClient] = None
+db = None
+tutorials_collection = None
+
+def get_database():
+    """Get database connection"""
+    global client, db, tutorials_collection
+    
+    if client is None:
+        client = AsyncMongoClient(os.environ["MONGODB_URI"])
+        db = client[os.environ["MONGODB_DB"]]
+        tutorials_collection = db["tutorials"]
+    
+    return tutorials_collection
 
 origins = [
     os.environ["FRONTEND_URL"]
@@ -66,6 +77,8 @@ def create_presigned_url(bucket_name, object_name, content_type, expiration=3600
 
 @app.post("/upload")
 async def presigned_token(request: FileDataRequest):
+    tutorials_collection = get_database()
+    
     try:
         logging.info(f"fileName: {request.fileName} fileSize: {request.fileSize} fileDuration: {request.fileDuration}")
 
@@ -120,6 +133,8 @@ async def presigned_token(request: FileDataRequest):
 
 @app.get("/tutorials", response_model=List[TutorialModel], status_code=status.HTTP_200_OK)
 async def list_tutorials(skip: int = 0, limit: int = 10):
+    tutorials_collection = get_database()
+    
     try:
         return await tutorials_collection.find().skip(skip).limit(limit).sort("createdAt", -1).to_list(length=limit)
     except Exception as e:
@@ -129,6 +144,8 @@ async def list_tutorials(skip: int = 0, limit: int = 10):
 
 @app.get("/tutorials/{tutorial_id}", response_model=TutorialModel, status_code=status.HTTP_200_OK)
 async def get_tutorial(tutorial_id: str = Path(..., description="The ID of the tutorial to retrieve")):
+    tutorials_collection = get_database()
+    
     try:
         if not ObjectId.is_valid(tutorial_id):
             raise HTTPException(status_code=400, detail="Invalid tutorial ID format")
@@ -144,6 +161,14 @@ async def get_tutorial(tutorial_id: str = Path(..., description="The ID of the t
     except Exception as e:
         logging.error(f"Failed to retrieve tutorial {tutorial_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve tutorial")
+
+
+@app.on_event("shutdown")
+async def shutdown_db_client():
+    """Close database connection on shutdown"""
+    global client
+    if client is not None:
+        client.close()
 
 
 handler = Mangum(app)

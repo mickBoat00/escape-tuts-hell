@@ -25,6 +25,16 @@ data "aws_ecr_image" "lambda_image" {
 resource "aws_lambda_function_url" "example" {
   function_name      = module.backend_lambda.function_name
   authorization_type = "NONE"
+
+  cors {
+    allow_credentials = false
+    allow_origins     = ["http://localhost:5174"]
+    allow_methods     = ["*"]
+    allow_headers     = ["*"]
+    expose_headers    = ["*"]
+    max_age           = 3000
+  }
+  
 }
 
 module "backend_lambda" {
