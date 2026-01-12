@@ -1,6 +1,6 @@
 module "public_s3" {
   source      = "./modules/s3"
-  bucket_name = "Esc-uploads-${var.account_id}"
+  bucket_name = "esc-tuts-${var.account_id}"
 
   cors_rule = {
     allowed_methods = ["GET", "HEAD", "PUT", "DELETE"]
