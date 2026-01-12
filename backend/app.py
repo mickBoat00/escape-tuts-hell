@@ -11,7 +11,6 @@ from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 from pymongo import AsyncMongoClient
 
 from models import FileDataRequest, TutorialModel
@@ -40,17 +39,6 @@ def get_database():
     
     return tutorials_collection
 
-origins = [
-    os.environ["FRONTEND_URL"]
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 def create_presigned_url(bucket_name, object_name, content_type, expiration=3600):
     region = os.environ["AWS_REGION"]
