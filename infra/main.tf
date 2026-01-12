@@ -1,10 +1,15 @@
 module "public_s3" {
   source      = "./modules/s3"
-  bucket_name = "esc-uploads-${var.account_id}"
+  bucket_name = "Esc-uploads-${var.account_id}"
+
+  cors_rule = {
+    allowed_methods = ["GET", "HEAD", "PUT", "DELETE"]
+    allowed_origins = [
+      "http://localhost:5174"
+    ]
+    allowed_headers = ["*"]
+    expose_headers  = []
+    max_age_seconds = 3000
+  }
   
-  cors_allowed_methods = ["GET", "PUT", "POST", "HEAD", "DELETE"]  # Added DELETE
-  cors_allowed_origins = [
-    "http://localhost:5173",
-    "http://localhost:5174",
-  ]
 }

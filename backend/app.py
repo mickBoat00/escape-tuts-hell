@@ -8,7 +8,6 @@ from fastapi import FastAPI, status, Path
 from bson import ObjectId
 
 from botocore.exceptions import ClientError
-from botocore.config import Config
 
 from dotenv import load_dotenv
 
@@ -41,9 +40,10 @@ app.add_middleware(
 )
 
 def create_presigned_url(bucket_name, object_name, content_type, expiration=3600):
+    region = os.environ["AWS_REGION"]
     s3_client = boto3.client('s3',
-        region_name=os.environ["AWS_REGION"], 
-        config=Config(signature_version='s3v4')
+        region_name=region,
+        endpoint_url=f'https://s3.{region}.amazonaws.com',
     )
     try:
         response = s3_client.generate_presigned_url(
@@ -71,7 +71,7 @@ async def presigned_token(request: FileDataRequest):
 
         timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
         base_name = os.path.splitext(request.fileName)[0]
-        object_name = f"uploads/{base_name}_{timestamp}_{file_extension}"
+        object_name = f"{base_name}_{timestamp}_{file_extension}"
 
         url = create_presigned_url(
             bucket_name=os.environ['S3_BUCKET_NAME'],
