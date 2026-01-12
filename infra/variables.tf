@@ -21,24 +21,6 @@ variable "mongodb_collection" {
   
 }
 
-variable "frontend_url" {
-  
-}
-
-
-variable "bucket_name" {
-  
-}
-
-
-
-variable "ecr_repository_name" {
-  
-}
-
-
-
 variable "image_tag" {
   
 }
-
