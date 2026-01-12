@@ -10,7 +10,7 @@ const ProcessingFlow = () => {
             icon={FileText}
             title="Phase 1: AI Analysis"
             description={"The AI is analysis the video file"}
-            status={"completed"}
+            status={"running"}
             isActive={true}
             progress={50}
             timeEstimate={"30 minutes"}
