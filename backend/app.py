@@ -19,6 +19,8 @@ from models import FileDataRequest, TutorialModel
 
 from typing import List
 
+from mangum import Mangum
+
 app = FastAPI(title="Podcast AI Backend")
 
 load_dotenv()
@@ -142,3 +144,6 @@ async def get_tutorial(tutorial_id: str = Path(..., description="The ID of the t
     except Exception as e:
         logging.error(f"Failed to retrieve tutorial {tutorial_id}: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve tutorial")
+
+
+handler = Mangum(app)
