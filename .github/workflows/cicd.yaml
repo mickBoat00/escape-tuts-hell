@@ -13,6 +13,7 @@ jobs:
       AWS_REGION: eu-west-2
       ECR_REPO: main
       IMAGE_TAG: esc
+      TRANSCRIBE_IMAGE_TAG: transcribe
 
     permissions:
       id-token: write
@@ -40,12 +41,21 @@ jobs:
         docker build -t $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:$IMAGE_TAG .
         docker push $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:$IMAGE_TAG
 
+    # Build and push docker image for transcription
+    - name: Build and Push transcription lambda
+      run: |
+        cd workflow/transcribe
+        docker build -t $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:$TRANSCRIBE_IMAGE_TAG .
+        docker push $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:$TRANSCRIBE_IMAGE_TAG
+
     - name: Export TF_VAR for Terraform
       run: |
         echo "TF_VAR_image_tag=${IMAGE_TAG}" >> $GITHUB_ENV
         echo "TF_VAR_mongodb_uri=${{ secrets.MONGODB_URI }}" >> $GITHUB_ENV
         echo "TF_VAR_mongodb_db=${{ secrets.MONGODB_DB }}" >> $GITHUB_ENV
         echo "TF_VAR_mongodb_collection=${{ secrets.MONGODB_COLLECTION }}" >> $GITHUB_ENV
+        echo "TF_VAR_transcibe_image_tag=${{ env.TRANSCRIBE_IMAGE_TAG }}" >> $GITHUB_ENV
+        echo "TF_VAR_assemblyai_api_key=${{ secrets.ASSEMBLYAI_API_KEY }}" >> $GITHUB_ENV
 
     # Terraform deployment
     - name: Setup Terraform
