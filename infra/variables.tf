@@ -24,3 +24,11 @@ variable "mongodb_collection" {
 variable "image_tag" {
   
 }
+
+variable "transcibe_image_tag" {
+  
+}
+
+variable "assemblyai_api_key" {
+  
+}
