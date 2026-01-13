@@ -40,6 +40,13 @@ jobs:
         docker build -t $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:$IMAGE_TAG .
         docker push $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:$IMAGE_TAG
 
+    # Build and push docker image for transcription
+    - name: Build and Push transcription lambda
+      run: |
+        cd workflow/transcribe
+        docker build -t $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:transcribe .
+        docker push $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:transcribe
+
     - name: Export TF_VAR for Terraform
       run: |
         echo "TF_VAR_image_tag=${IMAGE_TAG}" >> $GITHUB_ENV
