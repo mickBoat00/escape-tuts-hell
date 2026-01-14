@@ -14,6 +14,7 @@ jobs:
       ECR_REPO: main
       IMAGE_TAG: esc
       TRANSCRIBE_IMAGE_TAG: transcribe
+      STATUS_IMAGE_TAG: statuses
 
     permissions:
       id-token: write
@@ -48,6 +49,13 @@ jobs:
         docker build -t $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:$TRANSCRIBE_IMAGE_TAG .
         docker push $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:$TRANSCRIBE_IMAGE_TAG
 
+
+    - name: Build and Push status updater lambda
+      run: |
+        cd workflow/StatusUpdater
+        docker build -t $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:$STATUS_IMAGE_TAG .
+        docker push $AWS_ACCOUNT_ID.dkr.ecr.eu-west-2.amazonaws.com/$ECR_REPO:$STATUS_IMAGE_TAG
+
     - name: Export TF_VAR for Terraform
       run: |
         echo "TF_VAR_image_tag=${IMAGE_TAG}" >> $GITHUB_ENV
@@ -56,6 +64,7 @@ jobs:
         echo "TF_VAR_mongodb_collection=${{ secrets.MONGODB_COLLECTION }}" >> $GITHUB_ENV
         echo "TF_VAR_transcibe_image_tag=${{ env.TRANSCRIBE_IMAGE_TAG }}" >> $GITHUB_ENV
         echo "TF_VAR_assemblyai_api_key=${{ secrets.ASSEMBLYAI_API_KEY }}" >> $GITHUB_ENV
+        echo "TF_VAR_status_image_tag=${{ env.STATUS_IMAGE_TAG }}" >> $GITHUB_ENV
 
     # Terraform deployment
     - name: Setup Terraform
