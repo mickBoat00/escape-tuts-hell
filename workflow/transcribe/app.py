@@ -35,6 +35,8 @@ def lambda_handler(event, context):
         transcript = transcriber.transcribe(input_url)
         
         if transcript.status == aai.TranscriptStatus.error:
+            error_message = f"Transcription failed: {transcript.error}"
+            
             tutorials.update_one(
                 {"_id": ObjectId(tutorial_id)},
                 {
@@ -50,12 +52,9 @@ def lambda_handler(event, context):
                     }
                 }
             )
-            return {
-                "success": False,
-                "error": f"Transcription failed: {transcript.error}",
-                "tutorialId": tutorial_id
-            }
-        
+            
+            # RAISE EXCEPTION to fail the Step Function
+            raise Exception(error_message)
 
         update_data = {
             "jobStatus.transcription": "completed",
@@ -74,7 +73,8 @@ def lambda_handler(event, context):
         
         return {
             "success": True,
-            "tutorialId": tutorial_id
+            "tutorialId": tutorial_id,
+            "transcript": transcript.text,
         }
         
     except Exception as e:
@@ -99,6 +99,6 @@ def lambda_handler(event, context):
                     }
                 )
             except Exception as db_error:
-                print(f"Failed to update database: {str(db_error)}")
+                logging.error(f"Failed to update database: {str(db_error)}")
         
         raise
