@@ -63,7 +63,7 @@ def presigned_token(request: FileDataRequest):
 
         url = create_presigned_url(
             bucket_name=os.environ["S3_BUCKET_NAME"],
-            object_name=object_name,
+            object_name=f"uploads/{object_name}",
             content_type=request.contentType,
         )
 
