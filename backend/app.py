@@ -4,7 +4,7 @@ import boto3
 from datetime import datetime
 from typing import List
 
-from fastapi import FastAPI, HTTPException, status, Path
+from fastapi import FastAPI, HTTPException, Path
 from bson import ObjectId
 from pymongo import MongoClient
 from botocore.exceptions import ClientError
@@ -57,13 +57,27 @@ def create_presigned_url(bucket_name, object_name, content_type, expiration=3600
 def presigned_token(request: FileDataRequest):
     try:
         file_extension = os.path.splitext(request.fileName)[1]
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         base_name = os.path.splitext(request.fileName)[0]
-        object_name = f"{base_name}_{timestamp}{file_extension}"
+
+        tutorial_data = {
+            "fileName": request.fileName,
+            "fileSize": request.fileSize,
+            "fileDuration": request.fileDuration,
+            "fileFormat": file_extension.lstrip("."),
+            "mimeType": request.contentType,
+            "status": "uploading",
+            "createdAt": datetime.utcnow(),
+        }
+
+        result = tutorials.insert_one(tutorial_data)
+        tutorial_id = str(result.inserted_id)
+
+        object_name = f"{base_name}_{tutorial_id}{file_extension}"
+        s3_key = f"uploads/{object_name}"
 
         url = create_presigned_url(
             bucket_name=os.environ["S3_BUCKET_NAME"],
-            object_name=f"uploads/{object_name}",
+            object_name=s3_key,
             content_type=request.contentType,
         )
 
@@ -72,28 +86,23 @@ def presigned_token(request: FileDataRequest):
 
         s3_url = (
             f"https://{os.environ['S3_BUCKET_NAME']}"
-            f".s3.{os.environ['AWS_REGION']}.amazonaws.com/{object_name}"
+            f".s3.{os.environ['AWS_REGION']}.amazonaws.com/{s3_key}"
         )
 
-        tutorial_data = {
-            "inputUrl": s3_url,
-            "fileName": request.fileName,
-            "fileSize": request.fileSize,
-            "fileDuration": request.fileDuration,
-            "fileFormat": file_extension.lstrip("."),
-            "mimeType": request.contentType,
-            "status": "uploaded",
-            "createdAt": datetime.utcnow(),
-        }
-
-        TutorialModel(**tutorial_data)
-
-        result = tutorials.insert_one(tutorial_data)
+        tutorials.update_one(
+            {"_id": result.inserted_id},
+            {
+                "$set": {
+                    "inputUrl": s3_url,
+                    "s3Key": s3_key,
+                }
+            }
+        )
 
         return {
             "url": url,
-            "tutorialId": str(result.inserted_id),
-            "s3Key": object_name,
+            "tutorialId": tutorial_id,
+            "s3Key": s3_key,
         }
 
     except Exception as e:
