@@ -106,3 +106,54 @@ module "transcribe_lambda" {
     },
   ]
 }
+
+module "step_function" {
+  source = "./modules/step_function"
+  step_function_name = "Esc-tutorials-Workflow"
+  policy_json = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "lambda:InvokeFunction"
+        ]
+        Resource = [
+          module.transcribe_lambda.lambda_arn,
+          "${module.transcribe_lambda.lambda_arn}:*",
+        ]
+      }
+    ]
+  })
+  state_machine_definition = jsonencode({
+    Comment = "Escape Tutorials workflow"
+    QueryLanguage = "JSONata"
+    StartAt = "Transcribe"
+    States = {
+      Transcribe = {
+        Type     = "Task"
+        Resource = "arn:aws:states:::lambda:invoke"
+        Output   = "{% $states.result.Payload %}"
+        Arguments = {
+          FunctionName = module.transcribe_lambda.lambda_arn
+          Payload      = "{% $states.input %}"
+        }
+        Retry = [
+          {
+            ErrorEquals = [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException",
+              "Lambda.TooManyRequestsException"
+            ]
+            IntervalSeconds = 1
+            MaxAttempts     = 3
+            BackoffRate     = 2
+            JitterStrategy  = "FULL"
+          }
+        ]
+        End = true
+      }
+    }
+  })
+}
