@@ -144,6 +144,9 @@ module "step_function" {
         Resource = [
           module.transcribe_lambda.lambda_arn,
           "${module.transcribe_lambda.lambda_arn}:*",
+
+          module.status_lambda.lambda_arn,
+          "${module.status_lambda.lambda_arn}:*"
         ]
       }
     ]
@@ -151,8 +154,32 @@ module "step_function" {
   state_machine_definition = jsonencode({
     Comment = "Escape Tutorials workflow"
     QueryLanguage = "JSONata"
-    StartAt = "Transcribe"
+    StartAt = "StatusUpdater"
     States = {
+      StatusUpdater = {
+        Type     = "Task"
+        Resource = "arn:aws:states:::lambda:invoke"
+        Output   = "{% $states.result.Payload %}"
+        Arguments = {
+          FunctionName = module.status_lambda.lambda_arn
+          Payload      = "{% $states.input %}"
+        }
+        Retry = [
+          {
+            ErrorEquals = [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException",
+              "Lambda.TooManyRequestsException"
+            ]
+            IntervalSeconds = 1
+            MaxAttempts     = 3
+            BackoffRate     = 2
+            JitterStrategy  = "FULL"
+          }
+        ]
+        Next = "Transcribe"
+      },
       Transcribe = {
         Type     = "Task"
         Resource = "arn:aws:states:::lambda:invoke"
