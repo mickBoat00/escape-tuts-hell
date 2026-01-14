@@ -1,10 +1,16 @@
+data "aws_ecr_image" "ecr" {
+  repository_name = "main"
+  image_tag       = var.image_tag_name
+}
+
+
 resource "aws_lambda_function" "lambda_function" {
   function_name = var.lambda_name
   role          = aws_iam_role.lambda_exec_role.arn
 
   package_type = "Image"
   
-  image_uri    = var.image_url
+  image_uri    = "${var.account_id}.dkr.ecr.${var.region}.amazonaws.com/main@${data.aws_ecr_image.ecr.image_digest}"
   memory_size = var.memory_size
   timeout     = var.timeout
 

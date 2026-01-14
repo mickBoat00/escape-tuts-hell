@@ -21,7 +21,7 @@ variable "timeout" {
 }
 
 
-variable "image_url" {
+variable "image_tag_name" {
   type    = string
 }
 
