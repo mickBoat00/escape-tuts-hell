@@ -14,6 +14,12 @@ module "public_s3" {
   
 }
 
+resource "aws_s3_bucket_notification" "bucket_notification" {
+  bucket      = module.public_s3.bucket_id
+  eventbridge = true
+}
+
+
 data "aws_ecr_image" "lambda_image" {
   repository_name = "main"
   image_tag       = var.image_tag
@@ -47,7 +53,7 @@ module "backend_lambda" {
     MONGODB_URI = var.mongodb_uri
     MONGODB_DB = var.mongodb_db
     MONGODB_COLLECTION = var.mongodb_collection
-    S3_BUCKET_NAME=module.public_s3.bucket_name
+    S3_BUCKET_NAME=module.public_s3.bucket_id
     FRONTEND_URL="http://localhost:5174"
   }
 
@@ -156,4 +162,61 @@ module "step_function" {
       }
     }
   })
+}
+
+# event bridge configuration
+
+resource "aws_cloudwatch_event_rule" "s3_object_created" {
+  name = "esc-s3-uploaded"
+
+  event_pattern = jsonencode({
+    source      = ["aws.s3"]
+    detail-type = ["Object Created"]
+    detail = {
+      bucket = {
+        name = [module.public_s3.bucket_id]
+      }
+      object = {
+        key = [{
+          prefix = "uploads/"
+        }]
+      }
+    }
+  })
+}
+
+
+resource "aws_iam_role" "eventbridge_stepfn_role" {
+  name = "eventbridge-stepfn-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "events.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "eventbridge_stepfn_policy" {
+  role = aws_iam_role.eventbridge_stepfn_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = "states:StartExecution"
+      Resource = module.step_function.state_machine_arn
+    }]
+  })
+}
+
+
+resource "aws_cloudwatch_event_target" "start_workflow" {
+  rule     = aws_cloudwatch_event_rule.s3_object_created.name
+  arn      = module.step_function.state_machine_arn
+  role_arn = aws_iam_role.eventbridge_stepfn_role.arn
 }
