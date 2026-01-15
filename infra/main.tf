@@ -130,6 +130,35 @@ module "status_lambda" {
   ]
 }
 
+module "llm_lambda" {
+  source = "./modules/lambda"
+
+  lambda_name         = "llm-content-generator"
+  region              = var.region
+  account_id          = var.account_id
+  image_tag_name      = var.status_image_tag
+  timeout = 900
+
+  environment_variables = {
+    MONGODB_URI = var.mongodb_uri
+    MONGODB_DB = var.mongodb_db
+    MONGODB_COLLECTION = var.mongodb_collection
+    CONTENT_TYPE = "CodingTutorialChecker"
+  }
+
+  policy_statements = [
+    {
+      Effect = "Allow"
+      Action = [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ]
+      Resource = "*"
+    },
+  ]
+}
+
 module "step_function" {
   source = "./modules/step_function"
   step_function_name = "Esc-tutorials-Workflow"
@@ -146,7 +175,10 @@ module "step_function" {
           "${module.transcribe_lambda.lambda_arn}:*",
 
           module.status_lambda.lambda_arn,
-          "${module.status_lambda.lambda_arn}:*"
+          "${module.status_lambda.lambda_arn}:*",
+
+          module.llm_lambda.lambda_arn,
+          "${module.llm_lambda.lambda_arn}:*",
         ]
       }
     ]
@@ -186,6 +218,30 @@ module "step_function" {
         Output   = "{% $states.result.Payload %}"
         Arguments = {
           FunctionName = module.transcribe_lambda.lambda_arn
+          Payload      = "{% $states.input %}"
+        }
+        Retry = [
+          {
+            ErrorEquals = [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException",
+              "Lambda.TooManyRequestsException"
+            ]
+            IntervalSeconds = 1
+            MaxAttempts     = 3
+            BackoffRate     = 2
+            JitterStrategy  = "FULL"
+          }
+        ]
+        Next = "CodingTutorialChecker"
+      },
+      CodingTutorialChecker = {
+        Type     = "Task"
+        Resource = "arn:aws:states:::lambda:invoke"
+        Output   = "{% $states.result.Payload %}"
+        Arguments = {
+          FunctionName = module.llm_lambda.lambda_arn
           Payload      = "{% $states.input %}"
         }
         Retry = [
