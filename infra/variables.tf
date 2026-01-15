@@ -37,3 +37,8 @@ variable "status_image_tag" {
 variable "assemblyai_api_key" {
   
 }
+
+
+variable "llm_image_tag" {
+  
+}
