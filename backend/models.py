@@ -17,7 +17,7 @@ PyObjectId = Annotated[str, BeforeValidator(str)]
 
 class JobStatus(BaseModel):
     transcription: Literal['pending', 'running', 'completed', 'failed'] = 'pending'
-    contentGeneration: Literal['pending', 'running', 'completed', 'failed'] = 'pending'
+    codingTutorialChecker: Literal['pending', 'running', 'completed', 'failed'] = 'pending'
 
 
 class Error(BaseModel):
