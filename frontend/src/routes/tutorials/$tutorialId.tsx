@@ -6,7 +6,7 @@ import { deleteTutorial, getTutorial } from '@/lib/api';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AlertCircle, Loader2, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import type { Tutorial } from '@/lib/types';
+import type { PhaseStatus, Tutorial } from '@/lib/types';
 
 export const Route = createFileRoute('/tutorials/$tutorialId')({
   component: RouteComponent,
@@ -15,28 +15,55 @@ export const Route = createFileRoute('/tutorials/$tutorialId')({
 function RouteComponent() {
   const { tutorialId } = Route.useParams();
   const navigate = useNavigate();
-  
+
   const [tutorial, setTutorial] = useState<Tutorial | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchTutorial = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await getTutorial(tutorialId);
-        setTutorial(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load tutorial');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchTutorial = async (showLoader = false) => {
+    try {
+      if (showLoader) setIsLoading(true);
 
-    fetchTutorial();
+      const data = await getTutorial(tutorialId);
+      setTutorial(data);
+      setError(null);
+
+      return data;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load tutorial');
+      return null;
+    } finally {
+      if (showLoader) setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTutorial(true);
   }, [tutorialId]);
+
+  useEffect(() => {
+    if (!tutorial) return;
+
+    const isTerminal =
+      tutorial.status === 'completed' ||
+      tutorial.status === 'failed';
+
+    if (isTerminal) return;
+
+    const interval = setInterval(async () => {
+      const updated = await fetchTutorial(false);
+
+      if (
+        updated?.status === 'completed' ||
+        updated?.status === 'failed'
+      ) {
+        clearInterval(interval);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [tutorialId, tutorial?.status]);
 
   const handleDelete = async () => {
     if (!tutorial) return;
@@ -51,8 +78,8 @@ function RouteComponent() {
 
     try {
       await deleteTutorial(tutorialId);
-      navigate({ to: '/tutorials' }); 
-    } catch (err) {
+      navigate({ to: '/tutorials' });
+    } catch {
       alert('Failed to delete tutorial. Please try again.');
       setIsDeleting(false);
     }
@@ -83,8 +110,8 @@ function RouteComponent() {
           </CardHeader>
           <CardContent>
             <p className="text-sm">{error}</p>
-            <Button 
-              onClick={() => navigate({ to: '/tutorials' })} 
+            <Button
+              onClick={() => navigate({ to: '/tutorials' })}
               className="mt-4"
               variant="outline"
             >
@@ -96,43 +123,43 @@ function RouteComponent() {
     );
   }
 
-  if (!tutorial) {
-    return null;
-  }
+  if (!tutorial) return null;
+
+  const transcriptionStatus: PhaseStatus =
+    tutorial.jobStatus?.transcription ?? 'pending';
 
   return (
     <div className="container max-w-6xl mx-auto py-10 px-4">
-      {/* Header with title and actions */}
       <div className="mb-8 flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-bold wrap-break-word">
-              {tutorial.fileName}
-            </h1>
-          </div>
+          <h1 className="text-3xl font-bold wrap-break-word">
+            {tutorial.fileName}
+          </h1>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
-          <Button
-            size="lg"
-            onClick={handleDelete}
-            disabled={isDeleting}
-            className="gradient-emerald text-white hover-glow px-6 transition-all"
-          >
-            {isDeleting ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-            ) : (
-              <Trash2 className="h-4 w-4 mr-2" />
-            )}
-            <span className="font-semibold">Delete</span>
-          </Button>
-        </div>
+        <Button
+          size="lg"
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="gradient-emerald text-white hover-glow px-6 transition-all"
+        >
+          {isDeleting ? (
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          ) : (
+            <Trash2 className="h-4 w-4 mr-2" />
+          )}
+          <span className="font-semibold">Delete</span>
+        </Button>
       </div>
 
       <div className="grid gap-6">
         <TutorialStatusCard tutorial={tutorial} />
 
-        <ProcessingFlow />
+        <ProcessingFlow
+          transcriptionStatus={transcriptionStatus}
+          fileDuration={tutorial.fileDuration}
+          createdAt={tutorial.createdAt}
+        />
 
         {tutorial.status === 'failed' && (
           <Card className="border-destructive">
@@ -151,3 +178,5 @@ function RouteComponent() {
     </div>
   );
 }
+
+export default RouteComponent;

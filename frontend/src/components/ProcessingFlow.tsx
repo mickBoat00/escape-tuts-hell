@@ -1,19 +1,75 @@
-import React from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import PhaseCard from './PhaseCard'
 import { Badge, ChevronDown, FileText, Sparkles } from 'lucide-react'
 import FeatureItem from './FeatureItem'
+import type { PhaseStatus } from '@/lib/types';
+import { estimateAssemblyAITime, formatTimeRange } from '@/lib/processing-time';
 
-const ProcessingFlow = () => {
+interface ProcessingFlowProps {
+  transcriptionStatus: PhaseStatus;
+  fileDuration?: number;
+  createdAt: string;
+}
+
+
+const ProcessingFlow = ({
+  transcriptionStatus,
+  fileDuration,
+  createdAt,
+}: ProcessingFlowProps) => {
+
+    const [transcriptionProgress, setTranscriptionProgress] = useState(0);
+
+    const isTranscribing = transcriptionStatus === "running";
+    const transcriptionComplete = transcriptionStatus === "completed";
+    const transcriptionInProgress =
+        transcriptionStatus === "pending" || transcriptionStatus === "running";
+
+
+    const getTranscriptionDescription = useCallback(() => {
+        if (isTranscribing) return "AI is analyzing your tutorial...";
+        if (transcriptionComplete) return "Analysis complete!";
+        return "Preparing analysis...";
+    }, [isTranscribing, transcriptionComplete]);
+
+    const timeEstimate = useMemo(
+        () => estimateAssemblyAITime(fileDuration),
+        [fileDuration],
+    );
+
+    const timeRangeText = useMemo(
+        () => formatTimeRange(timeEstimate.bestCase, timeEstimate.conservative),
+        [timeEstimate.bestCase, timeEstimate.conservative],
+    );
+
+    useEffect(() => {
+        if (!isTranscribing) {
+        setTranscriptionProgress(0);
+        return;
+        }
+
+        const updateProgress = () => {
+        const elapsedSeconds = Math.floor((Date.now() - new Date(createdAt).getTime()) / 1000);
+        const progress = (elapsedSeconds / timeEstimate.conservative) * 100;
+        setTranscriptionProgress(Math.min(95, progress));
+        };
+
+        updateProgress();
+        const interval = setInterval(updateProgress, 1000);
+        return () => clearInterval(interval);
+    }, [isTranscribing, createdAt, timeEstimate.conservative]);
+
+
   return (
     <div className="space-y-6">
         <PhaseCard  
             icon={FileText}
             title="Phase 1: AI Analysis"
-            description={"The AI is analysis the video file"}
-            status={"running"}
-            isActive={true}
-            progress={50}
-            timeEstimate={"30 minutes"}
+            description={getTranscriptionDescription()}
+            status={transcriptionStatus}
+            isActive={isTranscribing}
+            progress={isTranscribing ? transcriptionProgress : undefined}
+            timeEstimate={transcriptionInProgress ? timeRangeText : undefined}
         />
 
         <div className="flex items-center justify-center">
@@ -24,7 +80,7 @@ const ProcessingFlow = () => {
             </div>
         </div>
 
-        <PhaseCard
+        {/* <PhaseCard
             icon={Sparkles}
             title="Phase 2: AI Generation"
             description={"Generation different content from transcript"}
@@ -90,7 +146,7 @@ const ProcessingFlow = () => {
                 </Badge>
 
             </div>
-        </PhaseCard>
+        </PhaseCard> */}
 
         
     </div>

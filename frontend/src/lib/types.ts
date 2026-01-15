@@ -10,6 +10,14 @@ export type UploadButtonState =
   | "Try Again"
 
 
+export type PhaseStatus =
+  'pending'| 'running'| 'completed' | 'failed';
+
+export interface JobStatus {
+  transcription: PhaseStatus;
+  contentGeneration: PhaseStatus;
+}
+
 export interface Tutorial {
   _id: string;
   inputUrl: string;
@@ -19,6 +27,7 @@ export interface Tutorial {
   fileFormat: string;
   mimeType: string;
   status: 'uploading' | 'uploaded' | 'processing' | 'completed' | 'failed';
+  jobStatus: JobStatus;
   createdAt: string;
   updatedAt?: string;
   completedAt?: string;
