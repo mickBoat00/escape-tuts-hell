@@ -136,7 +136,7 @@ module "llm_lambda" {
   lambda_name         = "llm-content-generator"
   region              = var.region
   account_id          = var.account_id
-  image_tag_name      = var.status_image_tag
+  image_tag_name      = var.llm_image_tag
   timeout = 900
 
   environment_variables = {
