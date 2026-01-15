@@ -5,6 +5,8 @@ from datetime import datetime
 from pymongo import MongoClient
 from bson import ObjectId
 from google import genai
+from schemas.coding_tutorial_checker import CodingTutorialCheck
+from prompts.coding_tutorial_checker_prompt import CODING_TUTORIAL_CHECKER_PROMPT
 
 logging.basicConfig(level=logging.INFO)
 
@@ -14,10 +16,9 @@ tutorials = db["tutorials"]
 
 CONTENT_GENERATORS = {
     "CodingTutorialChecker": {
-        "prompt": "podcast_summary_prompt",
-        "schema": "Summary",
-        "db_field": "summary",
-        "job_status_field": "contentGeneration"
+        "prompt": CODING_TUTORIAL_CHECKER_PROMPT,
+        "schema": CodingTutorialCheck,
+        "db_field": "codingTutorialCheck",
     },
 }
 
@@ -43,7 +44,7 @@ def lambda_handler(event, context):
             {"_id": ObjectId(tutorial_id)},
             {
                 "$set": {
-                    f"jobStatus.{config.get("job_status_field")}": "running",
+                    f"jobStatus.{config.get("db_field")}": "running",
                     "updatedAt": datetime.utcnow()
                 }
             }
@@ -53,11 +54,13 @@ def lambda_handler(event, context):
     
         try:
             client = genai.Client()
+
+            prompt = config["prompt"].replace("{{TRANSCRIPT}}", transcript)
             
             # Generate content with structured output
             response = client.models.generate_content(
                 model="gemini-2.5-flash-lite",
-                contents=config["prompt"],
+                contents=prompt,
                 config={
                     "response_mime_type": "application/json",
                     "response_schema": config["schema"],
@@ -94,6 +97,7 @@ def lambda_handler(event, context):
             "success": True,
             "tutorialId": tutorial_id,
             "transcript": transcript,
+            "generatedContent": generated_content
         }
             
         
@@ -108,7 +112,7 @@ def lambda_handler(event, context):
                     {
                         "$set": {
                             "status": "failed",
-                            f"jobStatus.{config.get("job_status_field")}": "failed",
+                            f"jobStatus.{config.get("db_field")}": "failed",
                             "error": {
                                 "step": content_type,
                                 "message": error_msg,

@@ -17,7 +17,7 @@ PyObjectId = Annotated[str, BeforeValidator(str)]
 
 class JobStatus(BaseModel):
     transcription: Literal['pending', 'running', 'completed', 'failed'] = 'pending'
-    codingTutorialChecker: Literal['pending', 'running', 'completed', 'failed'] = 'pending'
+    codingTutorialCheck: Literal['pending', 'running', 'completed', 'failed'] = 'pending'
 
 
 class Error(BaseModel):
@@ -29,6 +29,10 @@ class Error(BaseModel):
 class Transcript(BaseModel):
     text: Optional[str] = None
 
+
+class CodingTutorialCheck(BaseModel):
+    isCodingTutorial: bool
+    reason: str 
 
 class TutorialModel(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
@@ -51,6 +55,7 @@ class TutorialModel(BaseModel):
     error: Optional[Error] = None
 
     transcript: Optional[Transcript] = None
+    codingTutorialCheck: Optional[CodingTutorialCheck] = None
 
     createdAt: datetime
     updatedAt: Optional[datetime] = None
