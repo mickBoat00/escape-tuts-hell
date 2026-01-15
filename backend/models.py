@@ -15,6 +15,21 @@ class FileDataRequest(BaseModel):
 
 PyObjectId = Annotated[str, BeforeValidator(str)]
 
+class JobStatus(BaseModel):
+    transcription: Literal['pending', 'running', 'completed', 'failed'] = 'pending'
+    contentGeneration: Literal['pending', 'running', 'completed', 'failed'] = 'pending'
+
+
+class Error(BaseModel):
+    message: Optional[str] = None
+    step: Optional[str] = None
+    timestamp: Optional[datetime] = None
+
+
+class Transcript(BaseModel):
+    text: Optional[str] = None
+
+
 class TutorialModel(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
 
@@ -31,6 +46,11 @@ class TutorialModel(BaseModel):
         'completed', 
         'failed'
     ] = 'uploading'
+
+    jobStatus: JobStatus = Field(default_factory=JobStatus)
+    error: Optional[Error] = None
+
+    transcript: Optional[Transcript] = None
 
     createdAt: datetime
     updatedAt: Optional[datetime] = None
