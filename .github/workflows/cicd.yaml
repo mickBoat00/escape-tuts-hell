@@ -75,6 +75,7 @@ jobs:
         echo "TF_VAR_assemblyai_api_key=${{ secrets.ASSEMBLYAI_API_KEY }}" >> $GITHUB_ENV
         echo "TF_VAR_status_image_tag=${{ env.STATUS_IMAGE_TAG }}" >> $GITHUB_ENV
         echo "TF_VAR_llm_image_tag=${{ env.LLM_IMAGE_TAG }}" >> $GITHUB_ENV
+        echo "TF_VAR_gemini_api_key=${{ secrets.GEMINI_API_KEY }}" >> $GITHUB_ENV
 
     # Terraform deployment
     - name: Setup Terraform

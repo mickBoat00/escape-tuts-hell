@@ -144,6 +144,7 @@ module "llm_lambda" {
     MONGODB_DB = var.mongodb_db
     MONGODB_COLLECTION = var.mongodb_collection
     CONTENT_TYPE = "CodingTutorialChecker"
+    GEMINI_API_KEY = var.gemini_api_key
   }
 
   policy_statements = [

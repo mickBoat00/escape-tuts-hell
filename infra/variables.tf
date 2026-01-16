@@ -42,3 +42,7 @@ variable "assemblyai_api_key" {
 variable "llm_image_tag" {
   
 }
+
+variable "gemini_api_key" {
+  
+}
