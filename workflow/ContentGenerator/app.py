@@ -97,7 +97,7 @@ def lambda_handler(event, context):
             "success": True,
             "tutorialId": tutorial_id,
             "transcript": transcript,
-            "generatedContent": generated_content
+            **generated_content
         }
             
         
