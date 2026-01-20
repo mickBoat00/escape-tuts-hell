@@ -5,8 +5,12 @@ from datetime import datetime
 from pymongo import MongoClient
 from bson import ObjectId
 from google import genai
+from workflow.ContentGenerator.prompts.coding_tutorial_checker_prompt import CODING_TUTORIAL_CHECKER_PROMPT
+from workflow.ContentGenerator.prompts.questionnaires_prompt import TUTORIAL_QUESTION_PROMPT
+
 from schemas.coding_tutorial_checker import CodingTutorialCheck
-from prompts.coding_tutorial_checker_prompt import CODING_TUTORIAL_CHECKER_PROMPT
+from schemas.questionnaire import CodingInterviewQA
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -20,11 +24,16 @@ CONTENT_GENERATORS = {
         "schema": CodingTutorialCheck,
         "db_field": "codingTutorialCheck",
     },
+    "TutorialQ&A": {
+        "prompt": TUTORIAL_QUESTION_PROMPT,
+        "schema": CodingInterviewQA,
+        "db_field": "TutorialQA",
+    },
 }
 
 def lambda_handler(event, context):
     tutorial_id = None
-    content_type = os.environ["CONTENT_TYPE"]
+    content_type = event["contentType"]
     config = CONTENT_GENERATORS[content_type]
 
     try:

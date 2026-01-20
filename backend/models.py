@@ -1,7 +1,7 @@
 
 
 from datetime import datetime
-from typing import Annotated, Optional,Literal
+from typing import Annotated, Optional,Literal, List
 
 from bson import ObjectId
 from pydantic import BaseModel, Field, BeforeValidator
@@ -34,6 +34,23 @@ class CodingTutorialCheck(BaseModel):
     isCodingTutorial: bool
     reason: str 
 
+
+class InterviewQuestion(BaseModel):
+    question: str = Field(
+        description="A common technical interview question derived from the transcript"
+    )
+    answer: str = Field(
+        description="Exact sentence(s) copied verbatim from the transcript that answer the question"
+    )
+
+
+class CodingInterviewQA(BaseModel):
+    questions: List[InterviewQuestion] = Field(
+        description="List of up to 10 interview questions and transcript-backed answers"
+    )
+
+
+
 class TutorialModel(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
 
@@ -56,6 +73,7 @@ class TutorialModel(BaseModel):
 
     transcript: Optional[Transcript] = None
     codingTutorialCheck: Optional[CodingTutorialCheck] = None
+    TutorialQA: Optional[CodingInterviewQA] = None
 
     createdAt: datetime
     updatedAt: Optional[datetime] = None
