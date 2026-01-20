@@ -259,6 +259,29 @@ module "step_function" {
             JitterStrategy  = "FULL"
           }
         ]
+        Next = "IsCodingTutorial"
+      },
+      IsCodingTutorial = {
+        Type = "Choice"
+        Choices = [
+          {
+            Condition = "{% $states.input.isCodingTutorial = true %}"
+            Next      = "NextTask"
+          }
+        ]
+        Default = "EndWorkflow"
+      },
+      EndWorkflow = {
+        Type = "Succeed"
+      },
+      NextTask = {
+        Type     = "Task"
+        Resource = "arn:aws:states:::lambda:invoke"
+        Output   = "{% $states.result.Payload %}"
+        Arguments = {
+          FunctionName = module.llm_lambda.lambda_arn
+          Payload      = "{% $states.input %}"
+        }
         End = true
       }
     }
