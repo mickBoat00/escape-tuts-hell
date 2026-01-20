@@ -243,7 +243,7 @@ module "step_function" {
         Output   = "{% $states.result.Payload %}"
         Arguments = {
           FunctionName = module.llm_lambda.lambda_arn
-          Payload      = "{% $states.input %}"
+          Payload = "{% $merge($states.input, { \"contentType\": \"CodingTutorialChecker\" }) %}"
         }
         Retry = [
           {
@@ -266,7 +266,7 @@ module "step_function" {
         Choices = [
           {
             Condition = "{% $states.input.isCodingTutorial = true %}"
-            Next      = "NextTask"
+            Next      = "TutorialQnA"
           }
         ]
         Default = "EndWorkflow"
@@ -274,13 +274,14 @@ module "step_function" {
       EndWorkflow = {
         Type = "Succeed"
       },
-      NextTask = {
+      TutorialQnA = {
         Type     = "Task"
         Resource = "arn:aws:states:::lambda:invoke"
         Output   = "{% $states.result.Payload %}"
         Arguments = {
           FunctionName = module.llm_lambda.lambda_arn
-          Payload      = "{% $states.input %}"
+          Payload = "{% $merge($states.input, { \"contentType\": \"TutorialQA\" }) %}"
+
         }
         End = true
       }
