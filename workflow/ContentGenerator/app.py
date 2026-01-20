@@ -5,8 +5,8 @@ from datetime import datetime
 from pymongo import MongoClient
 from bson import ObjectId
 from google import genai
-from workflow.ContentGenerator.prompts.coding_tutorial_checker_prompt import CODING_TUTORIAL_CHECKER_PROMPT
-from workflow.ContentGenerator.prompts.questionnaires_prompt import TUTORIAL_QUESTION_PROMPT
+from prompts.coding_tutorial_checker_prompt import CODING_TUTORIAL_CHECKER_PROMPT
+from prompts.questionnaires_prompt import TUTORIAL_QUESTION_PROMPT
 
 from schemas.coding_tutorial_checker import CodingTutorialCheck
 from schemas.questionnaire import CodingInterviewQA
