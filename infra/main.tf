@@ -243,7 +243,8 @@ module "step_function" {
         Output   = "{% $states.result.Payload %}"
         Arguments = {
           FunctionName = module.llm_lambda.lambda_arn
-          Payload = "{% $merge($states.input, { \"contentType\": \"CodingTutorialChecker\" }) %}"
+          Payload = "{% $merge([$states.input, { 'contentType': 'CodingTutorialChecker' }]) %}"
+        
         }
         Retry = [
           {
@@ -280,7 +281,8 @@ module "step_function" {
         Output   = "{% $states.result.Payload %}"
         Arguments = {
           FunctionName = module.llm_lambda.lambda_arn
-          Payload = "{% $merge($states.input, { \"contentType\": \"TutorialQA\" }) %}"
+          Payload = "{% $merge([$states.input, { 'contentType': 'TutorialQA' }]) %}"
+      
 
         }
         End = true
