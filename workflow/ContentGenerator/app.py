@@ -24,7 +24,7 @@ CONTENT_GENERATORS = {
         "schema": CodingTutorialCheck,
         "db_field": "codingTutorialCheck",
     },
-    "TutorialQ&A": {
+    "TutorialQA": {
         "prompt": TUTORIAL_QUESTION_PROMPT,
         "schema": CodingInterviewQA,
         "db_field": "TutorialQA",
