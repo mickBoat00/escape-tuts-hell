@@ -5,11 +5,14 @@ from datetime import datetime
 from pymongo import MongoClient
 from bson import ObjectId
 from google import genai
+
 from prompts.coding_tutorial_checker_prompt import CODING_TUTORIAL_CHECKER_PROMPT
 from prompts.questionnaires_prompt import TUTORIAL_QUESTION_PROMPT
+from prompts.coding_challenge_prompt import CODING_CHALLENGE_PROMPT
 
 from schemas.coding_tutorial_checker import CodingTutorialCheck
 from schemas.questionnaire import CodingInterviewQA
+from schemas.coding_challenge_schema import CodingChallengeOutput
 
 
 logging.basicConfig(level=logging.INFO)
@@ -28,6 +31,11 @@ CONTENT_GENERATORS = {
         "prompt": TUTORIAL_QUESTION_PROMPT,
         "schema": CodingInterviewQA,
         "db_field": "TutorialQA",
+    },
+    "CodingChallenge": {
+        "prompt": CODING_CHALLENGE_PROMPT,
+        "schema": CodingChallengeOutput,
+        "db_field": "codingChallenge",
     },
 }
 
