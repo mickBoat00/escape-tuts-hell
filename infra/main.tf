@@ -2,16 +2,41 @@ module "public_s3" {
   source      = "./modules/s3"
   bucket_name = "esc-tuts-${var.account_id}"
 
+  enable_public_access = true
+  public_read_policy   = true
+
   cors_rule = {
     allowed_methods = ["GET", "HEAD", "PUT", "DELETE"]
     allowed_origins = [
-      "http://localhost:5174"
+      "http://localhost:5174",
+      "https://${module.frontend_cloudfront.cloudfront_domain_name}"
     ]
     allowed_headers = ["*"]
     expose_headers  = []
     max_age_seconds = 3000
   }
-  
+}
+
+module "frontend_s3" {
+  source      = "./modules/s3"
+  bucket_name = "esc-tuts-frontend-${var.account_id}"
+
+  enable_public_access = false
+  public_read_policy   = false
+  enable_versioning    = false
+
+}
+
+module "frontend_cloudfront" {
+  source = "./modules/cloudfront"
+
+  bucket_id                   = module.frontend_s3.bucket_id
+  bucket_regional_domain_name = module.frontend_s3.bucket_regional_domain_name
+  bucket_arn                  = module.frontend_s3.bucket_arn
+
+  distribution_name = "Escape Tutorials Frontend"
+  price_class       = "PriceClass_100"
+  environment       = "production"
 }
 
 resource "aws_s3_bucket_notification" "bucket_notification" {
