@@ -33,7 +33,7 @@ class Extension(BaseModel):
     difficulty: str = Field(description="Difficulty level: beginner, intermediate, advanced")
     concepts: List[str] = Field(description="Additional concepts explored")
 
-class CodingChallenge(BaseModel):
+class CodingChallengeOutput(BaseModel):
     challenge_title: str = Field(description="Title of the coding challenge")
     
     introduction: str = Field(description="Engaging introduction explaining the challenge and its value")
@@ -59,13 +59,3 @@ class CodingChallenge(BaseModel):
     technologies_used: List[str] = Field(description="Technologies, protocols, or concepts involved")
     
     final_deliverable: str = Field(description="Description of the complete working application")
-
-class CodingChallengeOutput(BaseModel):
-    challenge: CodingChallenge = Field(description="The generated coding challenge")
-    metadata: dict = Field(
-        description="Metadata about challenge generation",
-        default_factory=lambda: {
-            "generator_version": "1.0",
-            "based_on_transcript": True
-        }
-    )
