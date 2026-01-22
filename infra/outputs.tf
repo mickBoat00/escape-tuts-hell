@@ -1,7 +1,7 @@
 # Backend API URL
 output "api_base_url" {
   description = "Backend Lambda function URL"
-  value       = module.backend_lambda.lambda_function_url
+  value       = aws_lambda_function_url.backend.function_url
 }
 
 # Frontend S3 Bucket
