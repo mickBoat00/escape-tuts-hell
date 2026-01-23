@@ -1,6 +1,6 @@
 module "public_s3" {
   source      = "./modules/s3"
-  bucket_name = "esc-tuts-${var.account_id}"
+  bucket_name = "esc-tuts-two-${var.account_id}"
 
   enable_public_access = true
   public_read_policy   = true
