@@ -44,7 +44,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
   eventbridge = true
 }
 
-resource "aws_lambda_function_url" "example" {
+resource "aws_lambda_function_url" "backend" {
   function_name      = module.backend_lambda.function_name
   authorization_type = "NONE"
 
@@ -56,7 +56,7 @@ resource "aws_lambda_function_url" "example" {
     expose_headers    = ["*"]
     max_age           = 3000
   }
-  
+  depends_on = [ module.backend_lambda ]
 }
 
 module "backend_lambda" {
