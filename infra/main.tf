@@ -50,7 +50,10 @@ resource "aws_lambda_function_url" "backend" {
 
   cors {
     allow_credentials = false
-    allow_origins     = ["http://localhost:5174"]
+    allow_origins     = [
+      "http://localhost:5174",
+      "https://${module.frontend_cloudfront.cloudfront_domain_name}"
+    ]
     allow_methods     = ["*"]
     allow_headers     = ["*"]
     expose_headers    = ["*"]

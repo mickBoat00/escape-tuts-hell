@@ -128,7 +128,7 @@ jobs:
 
     - name: Build Frontend
       env:
-        VITE_API_URL: ${{ steps.terraform-outputs.outputs.api_url }}
+        VITE_API_BASE_URL: ${{ steps.terraform-outputs.outputs.api_url }}
       run: |
         cd frontend
         npm run build

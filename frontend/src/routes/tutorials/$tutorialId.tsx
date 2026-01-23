@@ -26,6 +26,7 @@ function RouteComponent() {
       if (showLoader) setIsLoading(true);
 
       const data = await getTutorial(tutorialId);
+      console.log("API response:", data);
       setTutorial(data);
       setError(null);
 

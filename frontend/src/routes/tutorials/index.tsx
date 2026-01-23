@@ -21,6 +21,7 @@ function TutorialsPage() {
     const fetchTutorials = async () => {
       try {
         const response = await api.get("/tutorials")
+        console.log("API response:", response.data);
         setTutorials(response.data)
       } catch (err) {
         setError("Failed to load tutorials")

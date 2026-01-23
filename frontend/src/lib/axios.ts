@@ -5,4 +5,6 @@ const api = axios.create({
   timeout: 10000,
 })
 
+console.log(' import.meta.env.VITE_API_BASE_URL',  import.meta.env.VITE_API_BASE_URL)
+
 export default api
