@@ -1,4 +1,3 @@
-import React from 'react'
 import type { UploadStatus } from "@/lib/types";
 import { CheckCircle2, Clock, FileAudio, Loader2, XCircle } from 'lucide-react';
 import { formatDuration, formatFileSize } from '@/lib/audio-utils';

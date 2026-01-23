@@ -1,7 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import PhaseCard from './PhaseCard'
-import { Badge, ChevronDown, FileText, Sparkles } from 'lucide-react'
-import FeatureItem from './FeatureItem'
+import { ChevronDown, FileText } from 'lucide-react'
 import type { PhaseStatus } from '@/lib/types';
 import { estimateAssemblyAITime, formatTimeRange } from '@/lib/processing-time';
 

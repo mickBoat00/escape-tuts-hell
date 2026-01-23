@@ -1,6 +1,5 @@
 import { cn } from '@/lib/utils';
 import { CheckCircle2, Clock, Loader2, type LucideIcon } from 'lucide-react';
-import React from 'react'
 
 interface PhaseCardProps {
   icon: LucideIcon;

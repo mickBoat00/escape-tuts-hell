@@ -1,10 +1,10 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
 import UploadDropZone from './UploadDropZone';
 import { estimateDurationFromSize, getAudioDuration } from '@/lib/audio-utils';
-import type { UploadStatus, UploadButtonState } from '@/lib/types';
+import type { UploadStatus } from '@/lib/types';
 import { Button } from './ui/button';
 import UploadProgress from './UploadProgress';
 
@@ -14,7 +14,7 @@ const TutorialUploader = () => {
 
     const navigate = useNavigate()
 
-    const [disabled, setDisabled] = useState(false)
+    // const [disabled, setDisabled] = useState(false)
     //  Upload state
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [fileDuration, setFileDuration] = useState<number | undefined>(
@@ -23,7 +23,7 @@ const TutorialUploader = () => {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
     const [error, setError] = useState<string | null>(null);
-    const [uploadBtnState, setUploadBtnState] = useState<UploadButtonState>("Start Upload");
+    // const [uploadBtnState, setUploadBtnState] = useState<UploadButtonState>("Start Upload");
 
     const handleFileSelect = async (file: File) => {
         setSelectedFile(file);
@@ -51,7 +51,7 @@ const TutorialUploader = () => {
         setUploadStatus("idle");
         setUploadProgress(0);
         setError(null);
-        setUploadBtnState("Start Upload")
+        // setUploadBtnState("Start Upload")
     };
 
     const getS3SignUrl = async (file: File, fileDuration:number | undefined) => {
@@ -111,7 +111,7 @@ const TutorialUploader = () => {
         } catch (err) {
             console.error("Upload error:", err);
             setUploadStatus("error");
-            setUploadBtnState("Try Again")
+            // setUploadBtnState("Try Again")
 
             const errorMessage =
             err instanceof Error

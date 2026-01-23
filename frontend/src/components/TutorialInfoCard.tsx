@@ -1,7 +1,6 @@
 import type { Tutorial } from '@/lib/types';
 import { formatDate, formatDuration, formatFileSize } from '@/lib/utils';
 import { Calendar, Clock, FileType, HardDrive } from 'lucide-react';
-import React from 'react'
 
 
 interface TutorialStatusCardProps {

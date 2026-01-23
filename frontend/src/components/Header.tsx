@@ -1,5 +1,4 @@
 import { Sparkles } from 'lucide-react'
-import React from 'react'
 import { Link } from '@tanstack/react-router'
 import { Button } from './ui/button'
 
