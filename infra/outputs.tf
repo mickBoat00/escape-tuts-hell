@@ -30,6 +30,6 @@ output "frontend_url" {
 output "frontend_env_vars" {
   description = "Environment variables to use when building the frontend"
   value = {
-    VITE_API_URL = module.backend_lambda.lambda_function_url
+    VITE_API_URL = aws_lambda_function_url.backend.function_url
   }
 }
