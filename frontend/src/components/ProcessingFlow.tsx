@@ -36,6 +36,8 @@ const ProcessingFlow = ({
   createdAt,
 }: ProcessingFlowProps) => {
 
+    console.log('generationStatus', generationStatus)
+
     const [transcriptionProgress, setTranscriptionProgress] = useState(0);
     const [currentOutputIndex, setCurrentOutputIndex] = useState(0);
 
@@ -135,46 +137,48 @@ const ProcessingFlow = ({
             status={generationStatus}
             isActive={isGenerating}
         >
-            {isGenerating && (
-                <div className="space-y-3 pt-2">
-                    {availableFeatures.map((feature, idx) => {
-                    const isActive = idx === currentOutputIndex;
+            {isGenerating &&
+                (
+                    <div className="space-y-3 pt-2">
+                        {availableFeatures.map((feature, idx) => {
+                        const isActive = idx === currentOutputIndex;
 
-                    return (
-                        <FeatureItem
-                        key={feature.name}
-                        name={feature.name}
-                        description={feature.description}
-                        icon={feature.icon}
-                        isActive={isActive}
-                        />
-                    );
-                    })}
+                        return (
+                            <FeatureItem
+                            key={feature.name}
+                            name={feature.name}
+                            description={feature.description}
+                            icon={feature.icon}
+                            isActive={isActive}
+                            />
+                        );
+                        })}
 
-                    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 text-center mt-6 border-2 border-emerald-200 shadow-lg">
-                    <p className="text-sm text-gray-700 leading-relaxed">
-                        <span className="font-bold text-emerald-600 text-base">
-                        Powered by AWS step functions
-                        </span>{" "}
-                        — AI is generating {availableFeatures.length} output
-                        {availableFeatures.length > 1 ? "s" : ""} simultaneously
-                    </p>
+                        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 text-center mt-6 border-2 border-emerald-200 shadow-lg">
+                        <p className="text-sm text-gray-700 leading-relaxed">
+                            <span className="font-bold text-emerald-600 text-base">
+                            Powered by AWS step functions
+                            </span>{" "}
+                            — AI is generating {availableFeatures.length} output
+                            {availableFeatures.length > 1 ? "s" : ""} simultaneously
+                        </p>
+                        </div>
                     </div>
-                </div>
-                )}
+                )
+            }
 
-                {generationComplete && (
-                <div className="flex flex-wrap items-center gap-3 pt-4">
-                    {availableFeatures.map((feature) => (
-                    <Badge
-                        key={feature.name}
-                        className="text-sm px-4 py-2 gradient-emerald text-white shadow-md"
-                    >
-                        {feature.name}
-                    </Badge>
-                    ))}
-                </div>
-                )}
+            {generationComplete && (
+            <div className="flex flex-wrap items-center gap-3 pt-4">
+                {availableFeatures.map((feature) => (
+                <Badge
+                    key={feature.name}
+                    className="text-sm px-4 py-2 gradient-emerald text-white shadow-md"
+                >
+                    {feature.name}
+                </Badge>
+                ))}
+            </div>
+            )}
         </PhaseCard>
 
         

@@ -26,6 +26,7 @@ function RouteComponent() {
       if (showLoader) setIsLoading(true);
 
       const data = await getTutorial(tutorialId);
+      console.log(data)
       setTutorial(data);
       setError(null);
 
@@ -127,8 +128,22 @@ function RouteComponent() {
 
   const transcriptionStatus: PhaseStatus =
     tutorial.jobStatus?.transcription ?? 'pending';
-  const generationStatus: PhaseStatus =
-    tutorial.jobStatus?.contentGeneration ?? 'running';
+    const generationStatus: PhaseStatus = (() => {
+      console.log('first here')
+      if (!tutorial.jobStatus) return "pending";
+
+      const statuses = Object.values(tutorial.jobStatus);
+
+      console.log('statuses', statuses)
+
+
+
+      if (statuses.includes("running")) return "running";
+      if (statuses.includes("failed")) return "failed";
+      if (statuses.every(s => s === "completed")) return "completed";
+
+      return "pending";
+    })();
 
   return (
     <div className="container max-w-6xl mx-auto py-10 px-4">

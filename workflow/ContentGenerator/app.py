@@ -30,7 +30,7 @@ CONTENT_GENERATORS = {
     "TutorialQA": {
         "prompt": TUTORIAL_QUESTION_PROMPT,
         "schema": CodingInterviewQA,
-        "db_field": "TutorialQA",
+        "db_field": "tutorialQA",
     },
     "CodingChallenge": {
         "prompt": CODING_CHALLENGE_PROMPT,
