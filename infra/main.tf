@@ -297,7 +297,7 @@ module "step_function" {
             Next      = "ParallelContentGeneration"
           }
         ]
-        Default = "EndWorkflow"
+        Default = "MarkAsCompleted"
       },
       ParallelContentGeneration = {
         Type = "Parallel"
@@ -362,7 +362,31 @@ module "step_function" {
           }
         ]
         Output = "{% $merge($states.input) %}"
-        End    = true
+        Next   = "MarkAsCompleted"
+      },
+      MarkAsCompleted = {
+        Type     = "Task"
+        Resource = "arn:aws:states:::lambda:invoke"
+        Output   = "{% $states.result.Payload %}"
+        Arguments = {
+          FunctionName = module.status_lambda.lambda_arn
+          Payload      = "{% $merge([$states.input, { 'status': 'completed' }]) %}"
+        }
+        Retry = [
+          {
+            ErrorEquals = [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException",
+              "Lambda.TooManyRequestsException"
+            ]
+            IntervalSeconds = 1
+            MaxAttempts     = 3
+            BackoffRate     = 2
+            JitterStrategy  = "FULL"
+          }
+        ]
+        Next = "EndWorkflow"
       },
       EndWorkflow = {
         Type = "Succeed"
