@@ -1,28 +1,50 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import PhaseCard from './PhaseCard'
-import { ChevronDown, FileText } from 'lucide-react'
+import { Badge, ChevronDown, FileText, Sparkles, FileQuestionMark } from 'lucide-react'
 import type { PhaseStatus } from '@/lib/types';
 import { estimateAssemblyAITime, formatTimeRange } from '@/lib/processing-time';
+import FeatureItem from './FeatureItem';
 
 interface ProcessingFlowProps {
   transcriptionStatus: PhaseStatus;
+  generationStatus: PhaseStatus;
   fileDuration?: number;
   createdAt: string;
 }
 
 
+const availableFeatures = [
+    {
+        "name": "Coding Challenge",
+        "description": "Generating a simple Coding Challenge from video",
+        "icon": FileQuestionMark, 
+        "isActive": true
+    },
+    {
+        "name": "Tutorial Q&A",
+        "description": "Generating questions and answers from video",
+        "icon": FileQuestionMark, 
+        "isActive": true
+    }
+]
+
+
 const ProcessingFlow = ({
   transcriptionStatus,
+  generationStatus,
   fileDuration,
   createdAt,
 }: ProcessingFlowProps) => {
 
     const [transcriptionProgress, setTranscriptionProgress] = useState(0);
+    const [currentOutputIndex, setCurrentOutputIndex] = useState(0);
 
     const isTranscribing = transcriptionStatus === "running";
     const transcriptionComplete = transcriptionStatus === "completed";
     const transcriptionInProgress =
         transcriptionStatus === "pending" || transcriptionStatus === "running";
+    const isGenerating = generationStatus === "running";
+    const generationComplete = generationStatus === "completed";
 
 
     const getTranscriptionDescription = useCallback(() => {
@@ -58,6 +80,33 @@ const ProcessingFlow = ({
         return () => clearInterval(interval);
     }, [isTranscribing, createdAt, timeEstimate.conservative]);
 
+    const getGenerationDescription = useCallback(() => {
+        if (!transcriptionComplete) return "Waiting for analysis...";
+        const unlockedCount = availableFeatures.length;
+        if (isGenerating)
+        return `Generating ${unlockedCount} AI output${unlockedCount !== 1 ? "s" : ""} in parallel...`;
+        if (generationComplete) return "All content generated!";
+        return "Starting generation...";
+    }, [
+        transcriptionComplete,
+        isGenerating,
+        generationComplete,
+        availableFeatures.length,
+    ]);
+
+    useEffect(() => {
+        if (!isGenerating || availableFeatures.length === 0) {
+        setCurrentOutputIndex(0);
+        return;
+        }
+
+        const interval = setInterval(() => {
+        setCurrentOutputIndex((prev) => (prev + 1) % availableFeatures.length);
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, [isGenerating, availableFeatures.length]);
+
 
   return (
     <div className="space-y-6">
@@ -79,73 +128,54 @@ const ProcessingFlow = ({
             </div>
         </div>
 
-        {/* <PhaseCard
+        <PhaseCard
             icon={Sparkles}
             title="Phase 2: AI Generation"
-            description={"Generation different content from transcript"}
-            status={"running"}
-            isActive={true}
+            description={getGenerationDescription()}
+            status={generationStatus}
+            isActive={isGenerating}
         >
+            {isGenerating && (
+                <div className="space-y-3 pt-2">
+                    {availableFeatures.map((feature, idx) => {
+                    const isActive = idx === currentOutputIndex;
 
-            <div className="space-y-3 pt-2">
+                    return (
+                        <FeatureItem
+                        key={feature.name}
+                        name={feature.name}
+                        description={feature.description}
+                        icon={feature.icon}
+                        isActive={isActive}
+                        />
+                    );
+                    })}
 
-                <FeatureItem
-                  name={"Q&As"}
-                  description={"Question and Answers"}
-                  icon={FileText}
-                  isActive={true}
-                />
-
-                <FeatureItem
-                  name={"Q&As"}
-                  description={"Question and Answers"}
-                  icon={FileText}
-                  isActive={true}
-                />
-
-
-                <FeatureItem
-                  name={"Q&As"}
-                  description={"Question and Answers"}
-                  icon={FileText}
-                  isActive={false}
-                />
-
-                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 text-center mt-6 border-2 border-emerald-200 shadow-lg">
+                    <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 text-center mt-6 border-2 border-emerald-200 shadow-lg">
                     <p className="text-sm text-gray-700 leading-relaxed">
                         <span className="font-bold text-emerald-600 text-base">
-                        Using AWS Step functions
+                        Powered by AWS step functions
                         </span>{" "}
-                        — AI is generating {3} output
-                        {3 > 1 ? "s" : ""} simultaneously
+                        — AI is generating {availableFeatures.length} output
+                        {availableFeatures.length > 1 ? "s" : ""} simultaneously
                     </p>
+                    </div>
                 </div>
+                )}
 
-            </div>
-
-
-            <div className="flex flex-wrap items-center gap-3 pt-4">
-                <Badge
-                    className="text-sm px-4 py-2 gradient-emerald text-white shadow-md"
-                >
-                    Summary
-                </Badge>
-
-                <Badge
-                    className="text-sm px-4 py-2 gradient-emerald text-white shadow-md"
-                >
-                    Summary
-                </Badge>
-
-
-                <Badge
-                    className="text-sm px-4 py-2 gradient-emerald text-white shadow-md"
-                >
-                    Summary
-                </Badge>
-
-            </div>
-        </PhaseCard> */}
+                {generationComplete && (
+                <div className="flex flex-wrap items-center gap-3 pt-4">
+                    {availableFeatures.map((feature) => (
+                    <Badge
+                        key={feature.name}
+                        className="text-sm px-4 py-2 gradient-emerald text-white shadow-md"
+                    >
+                        {feature.name}
+                    </Badge>
+                    ))}
+                </div>
+                )}
+        </PhaseCard>
 
         
     </div>

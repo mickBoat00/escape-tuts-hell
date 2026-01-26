@@ -26,7 +26,7 @@ function RouteComponent() {
       if (showLoader) setIsLoading(true);
 
       const data = await getTutorial(tutorialId);
-      console.log("API response:", data);
+      console.log(data)
       setTutorial(data);
       setError(null);
 
@@ -128,6 +128,8 @@ function RouteComponent() {
 
   const transcriptionStatus: PhaseStatus =
     tutorial.jobStatus?.transcription ?? 'pending';
+  const generationStatus: PhaseStatus =
+    tutorial.jobStatus?.contentGeneration ?? 'running';
 
   return (
     <div className="container max-w-6xl mx-auto py-10 px-4">
@@ -158,6 +160,7 @@ function RouteComponent() {
 
         <ProcessingFlow
           transcriptionStatus={transcriptionStatus}
+          generationStatus={generationStatus}
           fileDuration={tutorial.fileDuration}
           createdAt={tutorial.createdAt}
         />

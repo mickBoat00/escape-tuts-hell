@@ -32,3 +32,9 @@ export interface Tutorial {
   updatedAt?: string;
   completedAt?: string;
 }
+
+
+export const FEATURES = {
+  CHALLENGE: "coding_challenge",
+  QNA: "question_and_answers",
+} as const;
