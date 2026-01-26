@@ -97,6 +97,7 @@ def lambda_handler(event, context):
         update_doc = {
             "$set": {
                 db_field: generated_content,
+                f"jobStatus.{db_field}": "completed",
                 "updatedAt": datetime.utcnow(),
             }
         }
