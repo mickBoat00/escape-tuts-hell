@@ -4,13 +4,41 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { deleteTutorial, getTutorial } from '@/lib/api';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { AlertCircle, Loader2, Trash2 } from 'lucide-react';
+import { AlertCircle, Loader2, RefreshCw, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { PhaseStatus, Tutorial } from '@/lib/types';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@radix-ui/react-tabs';
+import { Select, SelectContent, SelectTrigger, SelectValue } from '@radix-ui/react-select';
+import DesktopTabTrigger from '@/components/DesktopTabTrigger';
+import { Skeleton } from '@/components/ui/skeleton';
+import ErrorRetryCard from '@/components/ErrorRetryCard';
+
+
+export interface TabConfig {
+  value: string;
+  label: string;
+  // errorKey?: string;
+  // feature?: FeatureName;
+}
 
 export const Route = createFileRoute('/tutorials/$tutorialId')({
   component: RouteComponent,
 });
+
+ function TabSkeleton() {
+  return (
+    <Card>
+      <CardHeader>
+        <Skeleton className="h-6 w-48" />
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
+      </CardContent>
+    </Card>
+  );
+}
 
 function RouteComponent() {
   const { tutorialId } = Route.useParams();
@@ -20,6 +48,7 @@ function RouteComponent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("challenge");
 
   const fetchTutorial = async (showLoader = false) => {
     try {
@@ -129,14 +158,9 @@ function RouteComponent() {
   const transcriptionStatus: PhaseStatus =
     tutorial.jobStatus?.transcription ?? 'pending';
     const generationStatus: PhaseStatus = (() => {
-      console.log('first here')
       if (!tutorial.jobStatus) return "pending";
 
       const statuses = Object.values(tutorial.jobStatus);
-
-      console.log('statuses', statuses)
-
-
 
       if (statuses.includes("running")) return "running";
       if (statuses.includes("failed")) return "failed";
@@ -144,6 +168,27 @@ function RouteComponent() {
 
       return "pending";
     })();
+
+
+  const isProcessing = tutorial.status === "processing";
+  const isCompleted = tutorial.status === "completed";
+  const hasFailed = tutorial.status === "failed";
+  const showGenerating = isProcessing && generationStatus === "running";
+  
+  
+  const PROJECT_TABS: TabConfig[] = [
+    {
+      value: "challenge",
+      label: "Coding Challenge",
+    },
+
+    {
+      value: "questions",
+      label: "Question And Answers",
+    },
+
+  ];
+    
 
   return (
     <div className="container max-w-6xl mx-auto py-10 px-4">
@@ -172,14 +217,18 @@ function RouteComponent() {
       <div className="grid gap-6">
         <TutorialStatusCard tutorial={tutorial} />
 
-        <ProcessingFlow
-          transcriptionStatus={transcriptionStatus}
-          generationStatus={generationStatus}
-          fileDuration={tutorial.fileDuration}
-          createdAt={tutorial.createdAt}
-        />
+        {
+          isProcessing && (
+            <ProcessingFlow
+              transcriptionStatus={transcriptionStatus}
+              generationStatus={generationStatus}
+              fileDuration={tutorial.fileDuration}
+              createdAt={tutorial.createdAt}
+            />
+          )
+        }
 
-        {tutorial.status === 'failed' && (
+        {hasFailed && tutorial.error && (
           <Card className="border-destructive">
             <CardHeader>
               <CardTitle className="text-destructive">Error</CardTitle>
@@ -192,6 +241,38 @@ function RouteComponent() {
             </CardContent>
           </Card>
         )}
+
+        {
+          (showGenerating || isCompleted) && (
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
+
+              {/* Desktop Tabs */}
+              <div className="glass-card rounded-2xl p-2 mb-6 hidden lg:block">
+                <TabsList className="flex flex-wrap gap-2 bg-transparent min-w-max w-full">
+                  {PROJECT_TABS.map((tab) => (
+                    <DesktopTabTrigger
+                      key={tab.value}
+                      tab={tab}
+                      tutorial={tutorial}
+                    />
+                  ))}
+                </TabsList>
+              </div>
+
+              <TabsContent value="challenge" className="space-y-4">
+                {showGenerating && (<TabSkeleton />)} 
+              </TabsContent>
+
+            </Tabs>
+          )
+        }
+
+
+
       </div>
     </div>
   );
