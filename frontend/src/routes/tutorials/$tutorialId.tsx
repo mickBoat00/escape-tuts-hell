@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectTrigger, SelectValue } from '@radix-ui/rea
 import DesktopTabTrigger from '@/components/DesktopTabTrigger';
 import { Skeleton } from '@/components/ui/skeleton';
 import ErrorRetryCard from '@/components/ErrorRetryCard';
+import CodingChallengeTab from '@/components/tabs/CodingChallengeTab';
+import QuestionAndAnwsers from '@/components/tabs/QuestionAndAnwsers';
 
 
 export interface TabConfig {
@@ -183,7 +185,7 @@ function RouteComponent() {
     },
 
     {
-      value: "questions",
+      value: "qnas",
       label: "Question And Answers",
     },
 
@@ -265,6 +267,12 @@ function RouteComponent() {
 
               <TabsContent value="challenge" className="space-y-4">
                 {showGenerating && (<TabSkeleton />)} 
+                <CodingChallengeTab challenge={tutorial.codingChallenge}/>
+              </TabsContent>
+
+              <TabsContent value="qnas" className="space-y-4">
+                {showGenerating && (<TabSkeleton />)} 
+                <QuestionAndAnwsers quiz={tutorial.tutorialQA} />
               </TabsContent>
 
             </Tabs>
