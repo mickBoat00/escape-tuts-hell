@@ -1,7 +1,6 @@
 import type { Tutorial } from '@/lib/types';
 import { TabsTrigger } from '@radix-ui/react-tabs';
-import { AlertCircle, Lock } from 'lucide-react';
-import React from 'react'
+import { AlertCircle } from 'lucide-react';
 
 export interface TabConfig {
   value: string;
@@ -16,6 +15,8 @@ interface TabTriggerItemProps {
 }
 
 const DesktopTabTrigger = ({ tab, tutorial }: TabTriggerItemProps) => {
+
+  console.log(tutorial.inputUrl)
 
     const hasError = tab.errorKey
         // tab.errorKey &&

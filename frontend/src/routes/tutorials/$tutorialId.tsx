@@ -4,14 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { deleteTutorial, getTutorial } from '@/lib/api';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { AlertCircle, Loader2, RefreshCw, Trash2 } from 'lucide-react';
+import { AlertCircle, Loader2, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { PhaseStatus, Tutorial } from '@/lib/types';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@radix-ui/react-tabs';
-import { Select, SelectContent, SelectTrigger, SelectValue } from '@radix-ui/react-select';
+import { Tabs, TabsContent, TabsList, } from '@radix-ui/react-tabs';
 import DesktopTabTrigger from '@/components/DesktopTabTrigger';
 import { Skeleton } from '@/components/ui/skeleton';
-import ErrorRetryCard from '@/components/ErrorRetryCard';
+// import ErrorRetryCard from '@/components/ErrorRetryCard';
 import CodingChallengeTab from '@/components/tabs/CodingChallengeTab';
 import QuestionAndAnwsers from '@/components/tabs/QuestionAndAnwsers';
 
@@ -267,12 +266,14 @@ function RouteComponent() {
 
               <TabsContent value="challenge" className="space-y-4">
                 {showGenerating && (<TabSkeleton />)} 
-                <CodingChallengeTab challenge={tutorial.codingChallenge}/>
+                {/* <CodingChallengeTab challenge={tutorial.codingChallenge}/> */}
+                <CodingChallengeTab/>
               </TabsContent>
 
               <TabsContent value="qnas" className="space-y-4">
                 {showGenerating && (<TabSkeleton />)} 
-                <QuestionAndAnwsers quiz={tutorial.tutorialQA} />
+                {/* <QuestionAndAnwsers quiz={tutorial.tutorialQA} /> */}
+                <QuestionAndAnwsers/>
               </TabsContent>
 
             </Tabs>
