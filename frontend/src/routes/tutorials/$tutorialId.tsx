@@ -56,7 +56,7 @@ function RouteComponent() {
       if (showLoader) setIsLoading(true);
 
       const data = await getTutorial(tutorialId);
-      console.log(data)
+      console.log('tutorial obj', data)
       setTutorial(data);
       setError(null);
 
@@ -266,8 +266,8 @@ function RouteComponent() {
 
               <TabsContent value="challenge" className="space-y-4">
                 {showGenerating && (<TabSkeleton />)} 
-                {/* <CodingChallengeTab challenge={tutorial.codingChallenge}/> */}
-                <CodingChallengeTab/>
+                <CodingChallengeTab challenge={tutorial.codingChallenge}/>
+                {/* <CodingChallengeTab/> */}
               </TabsContent>
 
               <TabsContent value="qnas" className="space-y-4">
