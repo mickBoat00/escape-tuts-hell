@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { CodingInterviewQA } from '@/lib/types'
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -76,10 +76,10 @@ const QuestionAndAnswers = ({ quiz }: QuestionAndAnswersProps) => {
       <div className="space-y-6">
         {quiz.questions.map((q, qIndex) => {
           const userAnswers = answers[qIndex] || []
-          const isCorrect =
-            submitted &&
-            userAnswers.length === q.correct_answer_ids.length &&
-            q.correct_answer_ids.every(id => userAnswers.includes(id))
+          // const isCorrect =
+          //   submitted &&
+          //   userAnswers.length === q.correct_answer_ids.length &&
+          //   q.correct_answer_ids.every(id => userAnswers.includes(id))
 
           return (
             <Card key={qIndex}>

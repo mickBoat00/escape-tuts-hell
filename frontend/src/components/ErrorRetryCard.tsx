@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
@@ -30,6 +30,9 @@ const ErrorRetryCard = ({
       setIsRetrying(false);
     }
   };
+
+  console.log(tutorialId)
+  console.log(job)
 
   return (
     <Card className="border-destructive bg-destructive/5">
