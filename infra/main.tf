@@ -359,6 +359,35 @@ module "step_function" {
                 End = true
               }
             }
+          },
+          {
+            StartAt = "SimulateRetry"
+            States = {
+              SimulateRetry = {
+                Type     = "Task"
+                Resource = "arn:aws:states:::lambda:invoke"
+                Output   = "{% $states.result.Payload %}"
+                Arguments = {
+                  FunctionName = module.llm_lambda.lambda_arn
+                  Payload      = "{% $merge([$states.input, { 'contentType': 'SimulateRetry' }]) %}"
+                }
+                Retry = [
+                  {
+                    ErrorEquals = [
+                      "Lambda.ServiceException",
+                      "Lambda.AWSLambdaException",
+                      "Lambda.SdkClientException",
+                      "Lambda.TooManyRequestsException"
+                    ]
+                    IntervalSeconds = 1
+                    MaxAttempts     = 3
+                    BackoffRate     = 2
+                    JitterStrategy  = "FULL"
+                  }
+                ]
+                End = true
+              }
+            }
           }
         ]
         Output = "{% $merge($states.input) %}"
