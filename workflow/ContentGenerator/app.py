@@ -170,6 +170,7 @@ def lambda_handler(event, context):
             "tutorialId": tutorial_id,
             "transcript": transcript,
             "contentType": content_type,
+            **generated_content
         }
             
         
