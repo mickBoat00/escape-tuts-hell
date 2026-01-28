@@ -9,10 +9,12 @@ from google import genai
 from prompts.coding_tutorial_checker_prompt import CODING_TUTORIAL_CHECKER_PROMPT
 from prompts.questionnaires_prompt import TUTORIAL_QUESTION_PROMPT
 from prompts.coding_challenge_prompt import CODING_CHALLENGE_PROMPT
+from prompts.simulate_retry import SUMMARY_PROMPT
 
 from schemas.coding_tutorial_checker import CodingTutorialCheck
 from schemas.questionnaire import CodingInterviewQA
 from schemas.coding_challenge_schema import CodingChallengeOutput
+from schemas.summary import Summary
 
 
 logging.basicConfig(level=logging.INFO)
@@ -37,12 +39,58 @@ CONTENT_GENERATORS = {
         "schema": CodingChallengeOutput,
         "db_field": "codingChallenge",
     },
+    "SimulateRetry": {
+        "prompt": SUMMARY_PROMPT,
+        "schema": Summary,
+        "db_field": "summary",
+    },
 }
+
+def simulate_failure_for_retry(tutorial_id, db_field, content_type):
+    logging.warning(f"Simulating failure for {content_type}")
+    
+    # Update job status to running first
+    tutorials.update_one(
+        {"_id": ObjectId(tutorial_id)},
+        {
+            "$set": {
+                f"jobStatus.{db_field}": "running",
+                "updatedAt": datetime.utcnow()
+            }
+        }
+    )
+    
+    # Simulate some processing time
+    time.sleep(5)
+    
+    # Record the simulated failure
+    error_message = "Simulated failure for retry testing - first attempt"
+    tutorials.update_one(
+        {"_id": ObjectId(tutorial_id)},
+        {
+            "$set": {
+                f"jobStatus.{db_field}": "failed",
+                f"jobError.{db_field}": error_message,
+                "error": {
+                    "step": content_type,
+                    "message": error_message,
+                    "timestamp": datetime.utcnow()
+                },
+                "updatedAt": datetime.utcnow()
+            }
+        }
+    )
+    
+    return error_message
+
 
 def lambda_handler(event, context):
     tutorial_id = None
     content_type = event["contentType"]
-    config = CONTENT_GENERATORS[content_type]
+    config = CONTENT_GENERATORS.get(content_type)
+    
+    # Get simulation flag from event (optional)
+    simulate_failure = event.get("simulateRetry", False)
 
     try:
         tutorial_id = event["tutorialId"]
@@ -55,13 +103,20 @@ def lambda_handler(event, context):
         
         logging.info(f"Starting {content_type} generation for tutorial: {tutorial_id}")
 
-
         config = CONTENT_GENERATORS[content_type]
+        db_field = config["db_field"]
+        
+        # Check if we should simulate a failure for retry testing
+        if simulate_failure and content_type == "SimulateRetry":
+            error_message = simulate_failure_for_retry(tutorial_id, db_field, content_type)
+            raise Exception(error_message)
+
+        # Normal execution flow
         tutorials.update_one(
             {"_id": ObjectId(tutorial_id)},
             {
                 "$set": {
-                    f"jobStatus.{config.get("db_field")}": "running",
+                    f"jobStatus.{db_field}": "running",
                     "updatedAt": datetime.utcnow()
                 }
             }
@@ -92,7 +147,6 @@ def lambda_handler(event, context):
             logging.error(f"Error generating {content_type}: {str(e)}")
             raise
 
-        db_field = config["db_field"]
         
         update_doc = {
             "$set": {
@@ -115,7 +169,7 @@ def lambda_handler(event, context):
             "success": True,
             "tutorialId": tutorial_id,
             "transcript": transcript,
-            **generated_content
+            "contentType": content_type,
         }
             
         
@@ -123,14 +177,15 @@ def lambda_handler(event, context):
         error_msg = str(e)
         logging.error(f"ERROR: {error_msg}")
         
-        if tutorial_id:
+        if tutorial_id and config:
             try:
                 tutorials.update_one(
                     {"_id": ObjectId(tutorial_id)},
                     {
                         "$set": {
                             "status": "failed",
-                            f"jobStatus.{config.get("db_field")}": "failed",
+                            f"jobStatus.{config.get('db_field')}": "failed",
+                            f"jobError.{config.get('db_field')}": error_msg,
                             "error": {
                                 "step": content_type,
                                 "message": error_msg,

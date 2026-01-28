@@ -20,6 +20,15 @@ class JobStatus(BaseModel):
     codingTutorialCheck: Literal['pending', 'running', 'completed', 'failed'] = 'pending'
     tutorialQA: Literal['pending', 'running', 'completed', 'failed'] = 'pending'
     codingChallenge: Literal['pending', 'running', 'completed', 'failed'] = 'pending'    
+    summary: Literal['pending', 'running', 'completed', 'failed'] = 'pending'    
+
+
+class JobError(BaseModel):
+    transcription: Optional[str] = None
+    codingTutorialCheck: Optional[str] = None
+    tutorialQA: Optional[str] = None
+    codingChallenge: Optional[str] = None
+    summary: Optional[str] = None
 
 
 class Error(BaseModel):
@@ -159,7 +168,9 @@ class TutorialModel(BaseModel):
     ] = 'uploading'
 
     jobStatus: JobStatus = Field(default_factory=JobStatus)
+
     error: Optional[Error] = None
+    jobError: JobError = Field(default_factory=JobError)
 
     transcript: Optional[Transcript] = None
     codingTutorialCheck: Optional[CodingTutorialCheck] = None

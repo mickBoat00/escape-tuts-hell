@@ -83,7 +83,8 @@ def handle_s3_event(event: Dict[str, Any]) -> Dict[str, Any]:
         "tutorialId": tutorial_id,
         "tutorialVideoUrl": tutorial_video_url,
         "bucket": bucket_name,
-        "objectKey": object_key
+        "objectKey": object_key,
+        "simulateRetry": True
     }
 
 
