@@ -7,17 +7,44 @@ export type UploadStatus =
 
 export type UploadButtonState =
   | "Start Upload"
-  | "Try Again"
-
+  | "Try Again";
 
 export type PhaseStatus =
-  'pending'| 'running'| 'completed' | 'failed';
+  | "pending"
+  | "running"
+  | "completed"
+  | "failed";
 
 export interface JobStatus {
   transcription: PhaseStatus;
   codingTutorialCheck: PhaseStatus;
   tutorialQA: PhaseStatus;
   codingChallenge: PhaseStatus;
+}
+
+export interface Transcript {
+  text: string;
+}
+
+export interface CodingTutorialCheck {
+  isCodingTutorial: boolean;
+  reason: string;
+}
+
+export interface AnswerOption {
+  id: string; // "A", "B", "C", "D"
+  text: string;
+}
+
+export interface InterviewQuestion {
+  question: string;
+  options: AnswerOption[];
+  correct_answer_ids: string[]; 
+  transcript_evidence: string[]; 
+}
+
+export interface CodingInterviewQA {
+  questions: InterviewQuestion[];
 }
 
 
@@ -28,10 +55,16 @@ export interface BackgroundResource {
 }
 
 export interface Background {
-  content: string;
-  key_concepts: string[];
-  resources: BackgroundResource[];
+  content?: string;
+  key_concepts?: string[];
+  resources?: BackgroundResource[];
 }
+
+export interface Requirement {
+  id: number;
+  description: string;
+}
+
 
 export interface TestCase {
   description: string;
@@ -40,62 +73,45 @@ export interface TestCase {
 }
 
 export interface StepContent {
-  step_number: number;
+  step_number: number; // 0 = setup
   title: string;
   goal: string;
   description: string;
-  technical_requirements: string[];
-  concepts_taught: string[];
+
+  related_requirements: number[]; // Requirement IDs
+
   test_cases: TestCase[];
-  hints?: string[];
-  security_considerations?: string[];
 }
+
 
 export interface Extension {
   title: string;
   description: string;
-  difficulty: string;
-  concepts: string[];
 }
+
 
 export interface CodingChallengeOutput {
   challenge_title: string;
   introduction: string;
   real_world_relevance: string;
-  estimated_time: string;
-  difficulty_level: string;
-  background?: Background;
+
+  background: string;
+
+  requirements: Requirement[];
+
   steps: StepContent[];
+
   going_further: Extension[];
-  skills_developed: string[];
-  technologies_used: string[];
+
   final_deliverable: string;
 }
+
 
 export interface ErrorInfo {
   message?: string;
   step?: string;
-  timestamp?: string; // ISO datetime
+  timestamp?: string; // ISO date string
 }
-
-export interface Transcript {
-  text?: string;
-}
-
-export interface CodingTutorialCheck {
-  isCodingTutorial: boolean;
-  reason: string;
-}
-
-export interface InterviewQuestion {
-  question: string;
-  answer: string;
-}
-
-export interface CodingInterviewQA {
-  questions: InterviewQuestion[];
-}
-
 
 export interface Tutorial {
   _id: string;
@@ -107,7 +123,7 @@ export interface Tutorial {
   fileFormat: string;
   mimeType: string;
 
-  status: 'uploading' | 'uploaded' | 'processing' | 'completed' | 'failed';
+  status: "uploading" | "uploaded" | "processing" | "completed" | "failed";
 
   jobStatus: JobStatus;
   error?: ErrorInfo;
@@ -119,7 +135,7 @@ export interface Tutorial {
 
   createdAt: string;
   updatedAt?: string;
-  completedAt?: string;
+  completedAt?: string | null;
 }
 
 export const FEATURES = {

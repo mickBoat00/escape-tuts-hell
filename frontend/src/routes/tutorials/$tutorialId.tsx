@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 // import ErrorRetryCard from '@/components/ErrorRetryCard';
 import CodingChallengeTab from '@/components/tabs/CodingChallengeTab';
 import QuestionAndAnwsers from '@/components/tabs/QuestionAndAnwsers';
+import StimulateRetry from '@/components/tabs/StimulateRetry';
 
 
 export interface TabConfig {
@@ -56,7 +57,7 @@ function RouteComponent() {
       if (showLoader) setIsLoading(true);
 
       const data = await getTutorial(tutorialId);
-      console.log(data)
+      console.log('tutorial obj', data)
       setTutorial(data);
       setError(null);
 
@@ -188,6 +189,11 @@ function RouteComponent() {
       label: "Question And Answers",
     },
 
+    {
+      value: "retry",
+      label: "Stimulate Retry",
+    },
+
   ];
     
 
@@ -266,14 +272,20 @@ function RouteComponent() {
 
               <TabsContent value="challenge" className="space-y-4">
                 {showGenerating && (<TabSkeleton />)} 
-                {/* <CodingChallengeTab challenge={tutorial.codingChallenge}/> */}
-                <CodingChallengeTab/>
+                <CodingChallengeTab challenge={tutorial.codingChallenge}/>
               </TabsContent>
 
               <TabsContent value="qnas" className="space-y-4">
                 {showGenerating && (<TabSkeleton />)} 
-                {/* <QuestionAndAnwsers quiz={tutorial.tutorialQA} /> */}
-                <QuestionAndAnwsers/>
+                <QuestionAndAnwsers quiz={tutorial.tutorialQA} />
+              </TabsContent>
+
+              <TabsContent value="retry" className="space-y-4">
+                {showGenerating && (<TabSkeleton />)} 
+                <StimulateRetry error="Starting error">
+                  <h1>Hello</h1>
+
+                </StimulateRetry>
               </TabsContent>
 
             </Tabs>
