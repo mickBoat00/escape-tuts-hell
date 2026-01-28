@@ -109,6 +109,7 @@ def lambda_handler(event, context):
             "success": True,
             "tutorialId": tutorial_id,
             "transcript": transcript_text,
+            "simulateRetry": True
         }
         
     except Exception as e:

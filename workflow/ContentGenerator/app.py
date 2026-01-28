@@ -108,8 +108,15 @@ def lambda_handler(event, context):
         
         # Check if we should simulate a failure for retry testing
         if simulate_failure and content_type == "SimulateRetry":
-            error_message = simulate_failure_for_retry(tutorial_id, db_field, content_type)
-            raise Exception(error_message)
+            simulate_failure_for_retry(tutorial_id, db_field, content_type)
+            # raise Exception(error_message)
+            return {
+                "success": True,
+                "tutorialId": tutorial_id,
+                "transcript": transcript,
+                "contentType": content_type,
+                "simulateRetry": simulate_failure,
+            }
 
         # Normal execution flow
         tutorials.update_one(
@@ -170,6 +177,7 @@ def lambda_handler(event, context):
             "tutorialId": tutorial_id,
             "transcript": transcript,
             "contentType": content_type,
+            "simulateRetry": simulate_failure,
             **generated_content
         }
             
