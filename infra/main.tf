@@ -77,6 +77,7 @@ module "backend_lambda" {
     MONGODB_COLLECTION = var.mongodb_collection
     S3_BUCKET_NAME=module.public_s3.bucket_id
     FRONTEND_URL="http://localhost:5174"
+    STEP_FUNCTION_ARN=module.step_function.state_machine_arn
   }
 
   policy_statements = [
@@ -97,6 +98,11 @@ module "backend_lambda" {
         "s3:AbortMultipartUpload"
       ]
       Resource = "${module.public_s3.bucket_arn}/*"
+    },
+    {
+      Effect = "Allow"
+      Action = "states:StartExecution"
+      Resource = module.step_function.state_machine_arn
     }
   ]
 }
