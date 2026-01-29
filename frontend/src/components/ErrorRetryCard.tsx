@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
@@ -8,28 +7,18 @@ interface ErrorRetryCardProps {
   tutorialId: string
   job: string;
   errorMessage: string;
+  isRetrying: boolean;
+  onRetry: () => void;
 }
 
 
 const ErrorRetryCard = ({
   tutorialId,
   job,
+  onRetry,
+  isRetrying,
   errorMessage,
 }: ErrorRetryCardProps) => {
-  const [isRetrying, setIsRetrying] = useState(false);
-
-  const handleRetry = async () => {
-    setIsRetrying(true);
-    // toast.loading(`Retrying ${job}...`, { id: `retry-${job}` });
-
-    try {
-    //   await retryJob(projectId, job);
-    //   toast.success(`Retry started for ${job}`, { id: `retry-${job}` });
-    } catch (error) {
-    //   toast.error(`Failed to retry: ${error}`, { id: `retry-${job}` });
-      setIsRetrying(false);
-    }
-  };
 
   console.log(tutorialId)
   console.log(job)
@@ -45,7 +34,7 @@ const ErrorRetryCard = ({
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">{errorMessage}</p>
         <Button
-          onClick={handleRetry}
+          onClick={onRetry} 
           disabled={isRetrying}
           variant="outline"
           size="sm"
@@ -53,7 +42,7 @@ const ErrorRetryCard = ({
           <RefreshCw
             className={`h-4 w-4 mr-2 ${isRetrying ? "animate-spin" : ""}`}
           />
-          Retry
+          {isRetrying ? 'Retrying...' : 'Retry'}
         </Button>
       </CardContent>
     </Card>

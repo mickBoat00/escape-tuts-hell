@@ -9,11 +9,9 @@ import { useEffect, useState } from 'react';
 import type { PhaseStatus, Tutorial } from '@/lib/types';
 import { Tabs, TabsContent, TabsList, } from '@radix-ui/react-tabs';
 import DesktopTabTrigger from '@/components/DesktopTabTrigger';
-import { Skeleton } from '@/components/ui/skeleton';
-// import ErrorRetryCard from '@/components/ErrorRetryCard';
 import CodingChallengeTab from '@/components/tabs/CodingChallengeTab';
 import QuestionAndAnwsers from '@/components/tabs/QuestionAndAnwsers';
-import StimulateRetry from '@/components/tabs/StimulateRetry';
+import TabContentWrapper from '@/components/tabs/TabContentWrapper';
 
 
 export interface TabConfig {
@@ -27,21 +25,6 @@ export const Route = createFileRoute('/tutorials/$tutorialId')({
   component: RouteComponent,
 });
 
- function TabSkeleton() {
-  return (
-    <Card>
-      <CardHeader>
-        <Skeleton className="h-6 w-48" />
-      </CardHeader>
-      <CardContent className="space-y-2">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-3/4" />
-      </CardContent>
-    </Card>
-  );
-}
-
 function RouteComponent() {
   const { tutorialId } = Route.useParams();
   const navigate = useNavigate();
@@ -51,6 +34,20 @@ function RouteComponent() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("challenge");
+
+  const [retryingJobs, setRetryingJobs] = useState<Record<string, boolean>>({
+    challenge: false,
+    qnas: false,
+    summary: false,
+  });
+
+  const handleRetry = (jobName: string) => {
+    setRetryingJobs(prev => ({ ...prev, [jobName]: true }));
+
+    setTimeout(() => {
+      setRetryingJobs(prev => ({ ...prev, [jobName]: false }));
+    }, 5000);
+  };
 
   const fetchTutorial = async (showLoader = false) => {
     try {
@@ -270,23 +267,44 @@ function RouteComponent() {
                 </TabsList>
               </div>
 
-              <TabsContent value="challenge" className="space-y-4">
-                {showGenerating && (<TabSkeleton />)} 
-                <CodingChallengeTab challenge={tutorial.codingChallenge}/>
-              </TabsContent>
+                <TabsContent value="challenge" className="space-y-4">
+                  <TabContentWrapper
+                    tutorialId={tutorialId}
+                    jobName='challenge'
+                    isLoading={showGenerating}
+                    error={tutorial.jobError?.codingChallenge}
+                    isRetrying={retryingJobs.challenge}
+                    onRetry={() => handleRetry('challenge')}
+                  >
+                    <CodingChallengeTab challenge={tutorial.codingChallenge}/>
+                  </TabContentWrapper>
+                </TabsContent>
 
-              <TabsContent value="qnas" className="space-y-4">
-                {showGenerating && (<TabSkeleton />)} 
-                <QuestionAndAnwsers quiz={tutorial.tutorialQA} />
-              </TabsContent>
+                <TabsContent value="qnas" className="space-y-4">
+                  <TabContentWrapper
+                    tutorialId={tutorialId}
+                    jobName='qnas'
+                    isLoading={showGenerating}
+                    error={tutorial.jobError?.tutorialQA}
+                    isRetrying={retryingJobs.tutorialQA}
+                    onRetry={() => handleRetry('qnas')}
+                  >
+                    <QuestionAndAnwsers quiz={tutorial.tutorialQA} />
+                  </TabContentWrapper>
+                </TabsContent>
 
-              <TabsContent value="retry" className="space-y-4">
-                {showGenerating && (<TabSkeleton />)} 
-                <StimulateRetry error="Starting error">
-                  <h1>Hello</h1>
-
-                </StimulateRetry>
-              </TabsContent>
+                <TabsContent value="retry" className="space-y-4">
+                  <TabContentWrapper
+                    tutorialId={tutorialId}
+                    jobName='retry'
+                    isLoading={showGenerating}
+                    error={tutorial.jobError?.summary}
+                    isRetrying={retryingJobs.summary}
+                    onRetry={() => handleRetry('summary')}
+                  >
+                    <h1>Just a summary</h1>
+                  </TabContentWrapper>
+                </TabsContent>
 
             </Tabs>
           )

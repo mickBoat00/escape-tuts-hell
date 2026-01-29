@@ -20,6 +20,15 @@ export interface JobStatus {
   codingTutorialCheck: PhaseStatus;
   tutorialQA: PhaseStatus;
   codingChallenge: PhaseStatus;
+  summary: PhaseStatus;
+}
+
+export interface JobError {
+  transcription?: string;
+  codingTutorialCheck?: string;
+  tutorialQA?: string;
+  codingChallenge?: string; 
+  summary?: string; 
 }
 
 export interface Transcript {
@@ -127,6 +136,7 @@ export interface Tutorial {
 
   jobStatus: JobStatus;
   error?: ErrorInfo;
+  jobError?: JobError;
 
   transcript?: Transcript;
   codingTutorialCheck?: CodingTutorialCheck;
