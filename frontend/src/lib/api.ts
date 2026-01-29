@@ -29,3 +29,18 @@ export async function getAllTutorials(): Promise<Tutorial[]> {
     throw new Error(error.response?.data?.detail || 'Failed to fetch tutorials');
   }
 }
+
+export async function retryContentGeneration(
+  tutorialId: string, 
+  jobName: string
+): Promise<{ message: string; tutorialId: string; jobName: string; executionArn: string }> {
+  try {
+    const response = await api.post('/tutorials/retry', {
+      tutorialId,
+      jobName
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.detail || 'Failed to retry content generation');
+  }
+}

@@ -2,7 +2,7 @@ import ProcessingFlow from '@/components/ProcessingFlow';
 import TutorialStatusCard from '@/components/TutorialInfoCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { deleteTutorial, getTutorial } from '@/lib/api';
+import { deleteTutorial, getTutorial, retryContentGeneration } from '@/lib/api';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AlertCircle, Loader2, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -12,6 +12,7 @@ import DesktopTabTrigger from '@/components/DesktopTabTrigger';
 import CodingChallengeTab from '@/components/tabs/CodingChallengeTab';
 import QuestionAndAnwsers from '@/components/tabs/QuestionAndAnwsers';
 import TabContentWrapper from '@/components/tabs/TabContentWrapper';
+import { toast } from 'react-toastify';
 
 
 export interface TabConfig {
@@ -41,12 +42,25 @@ function RouteComponent() {
     summary: false,
   });
 
-  const handleRetry = (jobName: string) => {
+  const handleRetry = async (jobName: string) => {
     setRetryingJobs(prev => ({ ...prev, [jobName]: true }));
 
-    setTimeout(() => {
+    try {
+      const response = await retryContentGeneration(tutorialId, jobName);
+      
+      console.log('Retry initiated:', response);
+      
+      
+    } catch (error) {
+      console.error('Retry failed:', error);
+      
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Failed to retry. Please try again.';
+      
+      toast.error(errorMessage);
       setRetryingJobs(prev => ({ ...prev, [jobName]: false }));
-    }, 5000);
+    }
   };
 
   const fetchTutorial = async (showLoader = false) => {
