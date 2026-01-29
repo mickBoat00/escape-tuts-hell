@@ -1,6 +1,7 @@
 import os
-import logging
+import json
 import boto3
+import logging
 from datetime import datetime
 from typing import List
 
@@ -11,7 +12,7 @@ from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 from mangum import Mangum
 
-from models import FileDataRequest, TutorialModel
+from models import FileDataRequest, TutorialModel, RetryRequest
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -28,6 +29,8 @@ client = MongoClient(
 db = client[os.environ["MONGODB_DB"]]
 tutorials = db["tutorials"]
 
+
+stepfunctions = boto3.client('stepfunctions')
 
 def create_presigned_url(bucket_name, object_name, content_type, expiration=3600):
     region = os.environ["AWS_REGION"]
@@ -137,6 +140,44 @@ def get_tutorial(tutorial_id: str = Path(...)):
         raise HTTPException(status_code=404, detail="Tutorial not found")
 
     return tutorial
+
+
+@app.post("/tutorials/retry")
+def retry_content_generation(request: RetryRequest):
+    if not ObjectId.is_valid(request.tutorialId):
+        raise HTTPException(status_code=400, detail="Invalid tutorial ID format")
+    
+    tutorial = tutorials.find_one({"_id": ObjectId(request.tutorialId)})
+    if not tutorial:
+        raise HTTPException(status_code=404, detail="Tutorial not found")
+
+    try:
+        execution_input = {
+            "tutorialId": request.tutorialId,
+            "jobName": request.jobName,
+            "isRetry": True
+        }
+        
+        STEP_FUNCTION_ARN = os.environ["STEP_FUNCTION_ARN"]
+        
+        response = stepfunctions.start_execution(
+            stateMachineArn=STEP_FUNCTION_ARN,
+            name=f"retry-{request.tutorialId}-{request.jobName}-{datetime.utcnow()}",
+            input=json.dumps(execution_input)
+        )
+        
+        return {
+             "message": f"Retry initiated for {request.jobName}",
+            "tutorialId": request.tutorialId,
+            "jobName": request.jobName,
+            "executionArn": response['executionArn']
+        }
+           
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Failed to start retry: {str(e)}"
+        )
 
 
 handler = Mangum(app)
