@@ -104,7 +104,7 @@ module "backend_lambda" {
       Action = [
         "states:StartExecution"
       ]
-      Resource = "${module.step_function.state_machine_arn}/*"
+      Resource = module.step_function.state_machine_arn
     }
   ]
 }
