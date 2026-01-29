@@ -159,10 +159,13 @@ def retry_content_generation(request: RetryRequest):
         }
         
         STEP_FUNCTION_ARN = os.environ["STEP_FUNCTION_ARN"]
+
+        timestamp = int(datetime.utcnow().timestamp() * 1000)  # Unix timestamp in milliseconds
+        execution_name = f"retry-{request.tutorialId}-{request.jobName}-{timestamp}"
         
         response = stepfunctions.start_execution(
             stateMachineArn=STEP_FUNCTION_ARN,
-            name=f"retry-{request.tutorialId}-{request.jobName}-{datetime.utcnow()}",
+            name=execution_name,
             input=json.dumps(execution_input)
         )
         
