@@ -101,8 +101,10 @@ module "backend_lambda" {
     },
     {
       Effect = "Allow"
-      Action = "states:StartExecution"
-      Resource = module.step_function.state_machine_arn
+      Action = [
+        "states:StartExecution"
+      ]
+      Resource = "${module.step_function.state_machine_arn}/*"
     }
   ]
 }
