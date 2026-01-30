@@ -15,12 +15,30 @@ class FileDataRequest(BaseModel):
 
 PyObjectId = Annotated[str, BeforeValidator(str)]
 
+from enum import Enum
+
+
+class JobState(str, Enum):
+    pending = "pending"
+    running = "running"
+    retrying = "retrying"
+    completed = "completed"
+    failed = "failed"
+
+class TutorialStatus(str, Enum):
+    uploading = "uploading"
+    uploaded = "uploaded"
+    processing = "processing"
+    retrying = "retrying"
+    completed = "completed"
+    failed = "failed"
+
 class JobStatus(BaseModel):
-    transcription: Literal['pending', 'running', 'completed', 'failed'] = 'pending'
-    codingTutorialCheck: Literal['pending', 'running', 'completed', 'failed'] = 'pending'
-    tutorialQA: Literal['pending', 'running', 'completed', 'failed'] = 'pending'
-    codingChallenge: Literal['pending', 'running', 'completed', 'failed'] = 'pending'    
-    summary: Literal['pending', 'running', 'completed', 'failed'] = 'pending'    
+    transcription: JobState = JobState.pending
+    codingTutorialCheck: JobState = JobState.pending
+    tutorialQA: JobState = JobState.pending
+    codingChallenge: JobState = JobState.pending
+    summary: JobState = JobState.pending
 
 
 class JobError(BaseModel):
@@ -159,15 +177,8 @@ class TutorialModel(BaseModel):
     fileDuration: Optional[float] = None
     fileFormat: str
     mimeType: str
-    status: Literal[
-        'uploading', 
-        'uploaded', 
-        'processing', 
-        'completed', 
-        'failed'
-    ] = 'uploading'
-
-    jobStatus: JobStatus = Field(default_factory=JobStatus)
+    status: TutorialStatus = TutorialStatus.uploading
+    jobStatus: JobStatus = JobStatus()
 
     error: Optional[Error] = None
     jobError: JobError = Field(default_factory=JobError)

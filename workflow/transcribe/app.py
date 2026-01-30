@@ -20,6 +20,7 @@ def lambda_handler(event, context):
         tutorial_id = event["tutorialId"]
         is_retry = event.get("isRetry", False)
         job_name = event.get("jobName")
+        simulate_retry = event.get("simulateRetry", False)
 
         if is_retry:
             tutorial = tutorials.find_one({"_id": ObjectId(tutorial_id)})
@@ -45,7 +46,8 @@ def lambda_handler(event, context):
                 "tutorialId": tutorial_id,
                 "transcript": transcript_text,
                 "jobName": job_name,
-                "isRetry": True
+                "isRetry": is_retry,
+                "simulateRetry": simulate_retry,
             }
         
         input_url = event["tutorialVideoUrl"]
@@ -139,7 +141,8 @@ def lambda_handler(event, context):
             "success": True,
             "tutorialId": tutorial_id,
             "transcript": transcript_text,
-            "simulateRetry": True
+            "isRetry": is_retry,
+            "simulateRetry": simulate_retry,
         }
         
     except Exception as e:
