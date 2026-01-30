@@ -54,11 +54,7 @@ function RouteComponent() {
     } catch (error) {
       console.error('Retry failed:', error);
       
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'Failed to retry. Please try again.';
-      
-      toast.error(errorMessage);
+      toast.error('Failed to retry. Please try again.');
       setRetryingJobs(prev => ({ ...prev, [jobName]: false }));
     }
   };

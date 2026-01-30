@@ -88,6 +88,20 @@ def handle_s3_event(event: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def handle_workflow_retry(event: Dict[str, Any]) -> Dict[str, Any]:
+    required = ["tutorialId", "jobName", "isRetry"]
+
+    for field in required:
+        if field not in event:
+            raise ValueError(f"Missing required field: {field}")
+
+    return {
+        "statusCode": 200,
+        "tutorialId": event["tutorialId"],
+        "jobName": event["jobName"],
+        "isRetry": event["isRetry"]
+    }
+
 def lambda_handler(event, context):
     client = None
     tutorial_id = None
@@ -96,6 +110,9 @@ def lambda_handler(event, context):
         # Check if this is a direct status update call (from Step Functions)
         if 'tutorialId' in event and 'status' in event:
             return handle_direct_status_update(event)
+
+        elif 'isRetry' in event and 'jobName' in event:
+            return handle_workflow_retry(event)
         
         # Original S3 event-triggered mode
         else:

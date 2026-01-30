@@ -18,6 +18,36 @@ def lambda_handler(event, context):
     tutorial_id = None
     try:
         tutorial_id = event["tutorialId"]
+        is_retry = event.get("isRetry", False)
+        job_name = event.get("jobName")
+
+        if is_retry:
+            tutorial = tutorials.find_one({"_id": ObjectId(tutorial_id)})
+
+            if not tutorial or "transcript" not in tutorial:
+                raise Exception("Transcript not found for retry")
+
+            transcript_data = tutorial.get("transcript")
+
+            transcript_text = (
+                transcript_data.get("text")
+                if isinstance(transcript_data, dict)
+                else transcript_data
+            )
+
+            if not transcript_text:
+                raise Exception("Stored transcript is empty")
+
+            logging.info("Retry detected — reusing existing transcript")
+
+            return {
+                "success": True,
+                "tutorialId": tutorial_id,
+                "transcript": transcript_text,
+                "jobName": job_name,
+                "isRetry": True
+            }
+        
         input_url = event["tutorialVideoUrl"]
         
         tutorials.update_one(
