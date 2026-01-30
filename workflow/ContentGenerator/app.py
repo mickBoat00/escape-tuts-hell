@@ -134,6 +134,7 @@ def lambda_handler(event, context):
                     "contentType": content_type,
                     "jobName": job_name,
                     "skipped": True,
+                    "isCodingTutorial": True,
                     "reason": f"This content ({db_field}) is not the target for retry ({job_name})"
                 }
             
