@@ -86,30 +86,87 @@ def simulate_failure_for_retry(tutorial_id, db_field, content_type):
 
 def lambda_handler(event, context):
     tutorial_id = None
-    content_type = event["contentType"]
-    config = CONTENT_GENERATORS.get(content_type)
+    content_type = event.get("contentType")
+    job_name = event.get("jobName")
+    is_retry = event.get("isRetry", False)
     
-    # Get simulation flag from event (optional)
-    simulate_failure = event.get("simulateRetry", False)
-
     try:
         tutorial_id = event["tutorialId"]
-        transcript = event["transcript"]
         
-
         if content_type not in CONTENT_GENERATORS:
             raise ValueError(f"Invalid contentType: {content_type}. "
                            f"Available types: {list(CONTENT_GENERATORS.keys())}")
         
-        logging.info(f"Starting {content_type} generation for tutorial: {tutorial_id}")
-
         config = CONTENT_GENERATORS[content_type]
         db_field = config["db_field"]
+        
+        transcript = event.get("transcript")
+        
+        if not transcript:
+            logging.info(f"No transcript in event, fetching from database for tutorial: {tutorial_id}")
+            tutorial = tutorials.find_one({"_id": ObjectId(tutorial_id)})
+            
+            if not tutorial:
+                raise ValueError(f"Tutorial not found: {tutorial_id}")
+            
+            # Get transcript from database
+            transcript_obj = tutorial.get("transcript")
+            if transcript_obj and isinstance(transcript_obj, dict):
+                transcript = transcript_obj.get("text")
+            elif isinstance(transcript_obj, str):
+                transcript = transcript_obj
+            
+            if not transcript:
+                raise ValueError(f"No transcript available for tutorial: {tutorial_id}")
+            
+            logging.info(f"Retrieved transcript from database")
+        
+        # RETRY LOGIC
+        if is_retry:
+            logging.info(f"Processing RETRY - contentType: {content_type}, jobName: {job_name}, db_field: {db_field}")
+            
+            # Check if this retry is for THIS specific content type
+            if job_name != db_field:
+                logging.info(f"Skipping: jobName '{job_name}' does not match this content's db_field '{db_field}'")
+                return {
+                    "success": False,
+                    "tutorialId": tutorial_id,
+                    "contentType": content_type,
+                    "jobName": job_name,
+                    "skipped": True,
+                    "reason": f"This content ({db_field}) is not the target for retry ({job_name})"
+                }
+            
+            # Fetch tutorial to check job status
+            tutorial = tutorials.find_one({"_id": ObjectId(tutorial_id)})
+            if not tutorial:
+                raise ValueError(f"Tutorial not found: {tutorial_id}")
+            
+            # Check if the job status is "failed"
+            current_status = tutorial.get("jobStatus", {}).get(db_field)
+            
+            if current_status != "failed":
+                logging.warning(f"Job '{db_field}' has status '{current_status}', not 'failed'. Cannot retry.")
+                return {
+                    "success": False,
+                    "tutorialId": tutorial_id,
+                    "contentType": content_type,
+                    "jobName": job_name,
+                    "skipped": True,
+                    "reason": f"Job status is '{current_status}', not 'failed'",
+                    "message": "Cannot retry a job that hasn't failed"
+                }
+            
+            logging.info(f"Validated: Job '{db_field}' has status 'failed'. Proceeding with retry.")
+        
+        logging.info(f"Starting {content_type} generation for tutorial: {tutorial_id}")
+        
+        # Get simulation flag (only for initial runs, not retries)
+        simulate_failure = event.get("simulateRetry", False) and not is_retry
         
         # Check if we should simulate a failure for retry testing
         if simulate_failure and content_type == "SimulateRetry":
             simulate_failure_for_retry(tutorial_id, db_field, content_type)
-            # raise Exception(error_message)
             return {
                 "success": True,
                 "tutorialId": tutorial_id,
@@ -118,7 +175,8 @@ def lambda_handler(event, context):
                 "simulateRetry": simulate_failure,
             }
 
-        # Normal execution flow
+
+        # Update status to running
         tutorials.update_one(
             {"_id": ObjectId(tutorial_id)},
             {
@@ -132,12 +190,12 @@ def lambda_handler(event, context):
         generated_content = None
     
         try:
-            client = genai.Client()
+            genai_client = genai.Client()
 
             prompt = config["prompt"].replace("{{TRANSCRIPT}}", transcript)
             
             # Generate content with structured output
-            response = client.models.generate_content(
+            response = genai_client.models.generate_content(
                 model="gemini-2.5-flash-lite",
                 contents=prompt,
                 config={
@@ -159,9 +217,14 @@ def lambda_handler(event, context):
             "$set": {
                 db_field: generated_content,
                 f"jobStatus.{db_field}": "completed",
+                f"jobError.{db_field}": None,  # Clear previous error
                 "updatedAt": datetime.utcnow(),
             }
         }
+        
+        # Clear global error if this was the failed step
+        if is_retry:
+            update_doc["$unset"] = {"error": ""}
         
         # Update tutorial with generated content
         update_result = tutorials.update_one(
@@ -172,11 +235,15 @@ def lambda_handler(event, context):
         if update_result.modified_count == 0:
             logging.warning("Warning: No documents were modified")
         
+        logging.info(f"Successfully completed {content_type} generation (retry={is_retry})")
+        
         return {
             "success": True,
             "tutorialId": tutorial_id,
             "transcript": transcript,
             "contentType": content_type,
+            "jobName": job_name,
+            "isRetry": is_retry,
             "simulateRetry": simulate_failure,
             **generated_content
         }
@@ -184,17 +251,17 @@ def lambda_handler(event, context):
         
     except Exception as e:
         error_msg = str(e)
-        logging.error(f"ERROR: {error_msg}")
+        logging.error(f"ERROR in {content_type}: {error_msg}")
         
-        if tutorial_id and config:
+        if tutorial_id and content_type in CONTENT_GENERATORS:
+            config = CONTENT_GENERATORS[content_type]
             try:
                 tutorials.update_one(
                     {"_id": ObjectId(tutorial_id)},
                     {
                         "$set": {
-                            "status": "failed",
-                            f"jobStatus.{config.get('db_field')}": "failed",
-                            f"jobError.{config.get('db_field')}": error_msg,
+                            f"jobStatus.{config['db_field']}": "failed",
+                            f"jobError.{config['db_field']}": error_msg,
                             "error": {
                                 "step": content_type,
                                 "message": error_msg,
