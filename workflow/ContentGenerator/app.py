@@ -65,7 +65,7 @@ def simulate_failure_for_retry(tutorial_id, db_field, content_type):
     time.sleep(5)
     
     # Record the simulated failure
-    error_message = "Simulated failure for retry testing - first attempt"
+    error_message = "Simulated failure for retry testing"
     tutorials.update_one(
         {"_id": ObjectId(tutorial_id)},
         {
@@ -258,6 +258,6 @@ def lambda_handler(event, context):
                         "updatedAt": datetime.utcnow(),
                     }
                 },
-            )
+            )   
 
         raise

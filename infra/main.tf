@@ -221,215 +221,245 @@ module "step_function" {
     ]
   })
   state_machine_definition = jsonencode({
-    Comment       = "Escape Tutorials workflow"
-    QueryLanguage = "JSONata"
-    StartAt       = "StatusUpdater"
-    States = {
-      StatusUpdater = {
-        Type     = "Task"
-        Resource = "arn:aws:states:::lambda:invoke"
-        Output   = "{% $states.result.Payload %}"
-        Arguments = {
-          FunctionName = module.status_lambda.lambda_arn
-          Payload      = "{% $states.input %}"
-        }
-        Retry = [
-          {
-            ErrorEquals = [
-              "Lambda.ServiceException",
-              "Lambda.AWSLambdaException",
-              "Lambda.SdkClientException",
-              "Lambda.TooManyRequestsException"
-            ]
-            IntervalSeconds = 1
-            MaxAttempts     = 3
-            BackoffRate     = 2
-            JitterStrategy  = "FULL"
-          }
-        ]
-        Next = "Transcribe"
-      },
-      Transcribe = {
-        Type     = "Task"
-        Resource = "arn:aws:states:::lambda:invoke"
-        Output   = "{% $states.result.Payload %}"
-        Arguments = {
-          FunctionName = module.transcribe_lambda.lambda_arn
-          Payload      = "{% $states.input %}"
-        }
-        Retry = [
-          {
-            ErrorEquals = [
-              "Lambda.ServiceException",
-              "Lambda.AWSLambdaException",
-              "Lambda.SdkClientException",
-              "Lambda.TooManyRequestsException"
-            ]
-            IntervalSeconds = 1
-            MaxAttempts     = 3
-            BackoffRate     = 2
-            JitterStrategy  = "FULL"
-          }
-        ]
-        Next = "CodingTutorialChecker"
-      },
-      CodingTutorialChecker = {
-        Type     = "Task"
-        Resource = "arn:aws:states:::lambda:invoke"
-        Output   = "{% $states.result.Payload %}"
-        Arguments = {
-          FunctionName = module.llm_lambda.lambda_arn
-          Payload      = "{% $merge([$states.input, { 'contentType': 'CodingTutorialChecker' }]) %}"
-        }
-        Retry = [
-          {
-            ErrorEquals = [
-              "Lambda.ServiceException",
-              "Lambda.AWSLambdaException",
-              "Lambda.SdkClientException",
-              "Lambda.TooManyRequestsException"
-            ]
-            IntervalSeconds = 1
-            MaxAttempts     = 3
-            BackoffRate     = 2
-            JitterStrategy  = "FULL"
-          }
-        ]
-        Next = "IsCodingTutorial"
-      },
-      IsCodingTutorial = {
-        Type = "Choice"
-        Choices = [
-          {
-            Condition = "{% $states.input.isCodingTutorial = true %}"
-            Next      = "ParallelContentGeneration"
-          }
-        ]
-        Default = "MarkAsCompleted"
-      },
-      ParallelContentGeneration = {
-        Type = "Parallel"
-        Branches = [
-          {
-            StartAt = "TutorialQnA"
-            States = {
-              TutorialQnA = {
-                Type     = "Task"
-                Resource = "arn:aws:states:::lambda:invoke"
-                Output   = "{% $states.result.Payload %}"
-                Arguments = {
-                  FunctionName = module.llm_lambda.lambda_arn
-                  Payload      = "{% $merge([$states.input, { 'contentType': 'TutorialQA' }]) %}"
-                }
-                Retry = [
-                  {
-                    ErrorEquals = [
-                      "Lambda.ServiceException",
-                      "Lambda.AWSLambdaException",
-                      "Lambda.SdkClientException",
-                      "Lambda.TooManyRequestsException"
-                    ]
-                    IntervalSeconds = 1
-                    MaxAttempts     = 3
-                    BackoffRate     = 2
-                    JitterStrategy  = "FULL"
-                  }
-                ]
-                End = true
-              }
-            }
-          },
-          {
-            StartAt = "CodingChallenge"
-            States = {
-              CodingChallenge = {
-                Type     = "Task"
-                Resource = "arn:aws:states:::lambda:invoke"
-                Output   = "{% $states.result.Payload %}"
-                Arguments = {
-                  FunctionName = module.llm_lambda.lambda_arn
-                  Payload      = "{% $merge([$states.input, { 'contentType': 'CodingChallenge' }]) %}"
-                }
-                Retry = [
-                  {
-                    ErrorEquals = [
-                      "Lambda.ServiceException",
-                      "Lambda.AWSLambdaException",
-                      "Lambda.SdkClientException",
-                      "Lambda.TooManyRequestsException"
-                    ]
-                    IntervalSeconds = 1
-                    MaxAttempts     = 3
-                    BackoffRate     = 2
-                    JitterStrategy  = "FULL"
-                  }
-                ]
-                End = true
-              }
-            }
-          },
-          {
-            StartAt = "SimulateRetry"
-            States = {
-              SimulateRetry = {
-                Type     = "Task"
-                Resource = "arn:aws:states:::lambda:invoke"
-                Output   = "{% $states.result.Payload %}"
-                Arguments = {
-                  FunctionName = module.llm_lambda.lambda_arn
-                  Payload      = "{% $merge([$states.input, { 'contentType': 'SimulateRetry' }]) %}"
-                }
-                Retry = [
-                  {
-                    ErrorEquals = [
-                      "Lambda.ServiceException",
-                      "Lambda.AWSLambdaException",
-                      "Lambda.SdkClientException",
-                      "Lambda.TooManyRequestsException"
-                    ]
-                    IntervalSeconds = 1
-                    MaxAttempts     = 3
-                    BackoffRate     = 2
-                    JitterStrategy  = "FULL"
-                  }
-                ]
-                End = true
-              }
-            }
-          }
-        ]
-        Output = "{% $merge($states.input) %}"
-        Next   = "MarkAsCompleted"
-      },
-      MarkAsCompleted = {
-        Type     = "Task"
-        Resource = "arn:aws:states:::lambda:invoke"
-        Output   = "{% $states.result.Payload %}"
-        Arguments = {
-          FunctionName = module.status_lambda.lambda_arn
-          Payload      = "{% $merge([$states.input, { 'status': 'completed' }]) %}"
-        }
-        Retry = [
-          {
-            ErrorEquals = [
-              "Lambda.ServiceException",
-              "Lambda.AWSLambdaException",
-              "Lambda.SdkClientException",
-              "Lambda.TooManyRequestsException"
-            ]
-            IntervalSeconds = 1
-            MaxAttempts     = 3
-            BackoffRate     = 2
-            JitterStrategy  = "FULL"
-          }
-        ]
-        Next = "EndWorkflow"
-      },
-      EndWorkflow = {
-        Type = "Succeed"
+  Comment       = "Escape Tutorials workflow (with early retry branching)"
+  QueryLanguage = "JSONata"
+  StartAt       = "StatusUpdater"
+
+  States = {
+
+    StatusUpdater = {
+      Type     = "Task"
+      Resource = "arn:aws:states:::lambda:invoke"
+      Output   = "{% $states.result.Payload %}"
+      Arguments = {
+        FunctionName = module.status_lambda.lambda_arn
+        Payload      = "{% $states.input %}"
       }
+      Retry = [
+        {
+          ErrorEquals = [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ]
+          IntervalSeconds = 1
+          MaxAttempts     = 3
+          BackoffRate     = 2
+          JitterStrategy  = "FULL"
+        }
+      ]
+      Next = "IsRetryExecution"
     }
-  })
+
+    IsRetryExecution = {
+      Type = "Choice"
+      Choices = [
+        {
+          Condition = "{% $states.input.isRetry = true %}"
+          Next      = "RetryDispatcher"
+        }
+      ]
+      Default = "Transcribe"
+    }
+
+    RetryDispatcher = {
+      Type = "Pass"
+      Next = "ParallelContentGeneration"
+    }
+
+    Transcribe = {
+      Type     = "Task"
+      Resource = "arn:aws:states:::lambda:invoke"
+      Output   = "{% $states.result.Payload %}"
+      Arguments = {
+        FunctionName = module.transcribe_lambda.lambda_arn
+        Payload      = "{% $states.input %}"
+      }
+      Retry = [
+        {
+          ErrorEquals = [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ]
+          IntervalSeconds = 1
+          MaxAttempts     = 3
+          BackoffRate     = 2
+          JitterStrategy  = "FULL"
+        }
+      ]
+      Next = "CodingTutorialChecker"
+    }
+
+    CodingTutorialChecker = {
+      Type     = "Task"
+      Resource = "arn:aws:states:::lambda:invoke"
+      Output   = "{% $states.result.Payload %}"
+      Arguments = {
+        FunctionName = module.llm_lambda.lambda_arn
+        Payload      = "{% $merge([$states.input, { 'contentType': 'CodingTutorialChecker', 'jobName': 'CodingTutorialChecker' }]) %}"
+      }
+      Retry = [
+        {
+          ErrorEquals = [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ]
+          IntervalSeconds = 1
+          MaxAttempts     = 3
+          BackoffRate     = 2
+          JitterStrategy  = "FULL"
+        }
+      ]
+      Next = "IsCodingTutorial"
+    }
+
+    IsCodingTutorial = {
+      Type = "Choice"
+      Choices = [
+        {
+          Condition = "{% $boolean($states.input.isCodingTutorial) %}"
+          Next      = "ParallelContentGeneration"
+        }
+      ]
+      Default = "MarkAsCompleted"
+    }
+
+    ParallelContentGeneration = {
+      Type = "Parallel"
+
+      Branches = [
+
+        {
+          StartAt = "TutorialQnA"
+          States = {
+            TutorialQnA = {
+              Type     = "Task"
+              Resource = "arn:aws:states:::lambda:invoke"
+              Output   = "{% $states.result.Payload %}"
+              Arguments = {
+                FunctionName = module.llm_lambda.lambda_arn
+                Payload      = "{% $merge([$states.input, { 'contentType': 'TutorialQA', 'jobName': 'TutorialQA' }]) %}"
+              }
+              Retry = [
+                {
+                  ErrorEquals = [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ]
+                  IntervalSeconds = 1
+                  MaxAttempts     = 3
+                  BackoffRate     = 2
+                  JitterStrategy  = "FULL"
+                }
+              ]
+              End = true
+            }
+          }
+        },
+
+        {
+          StartAt = "CodingChallenge"
+          States = {
+            CodingChallenge = {
+              Type     = "Task"
+              Resource = "arn:aws:states:::lambda:invoke"
+              Output   = "{% $states.result.Payload %}"
+              Arguments = {
+                FunctionName = module.llm_lambda.lambda_arn
+                Payload      = "{% $merge([$states.input, { 'contentType': 'CodingChallenge', 'jobName': 'CodingChallenge' }]) %}"
+              }
+              Retry = [
+                {
+                  ErrorEquals = [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ]
+                  IntervalSeconds = 1
+                  MaxAttempts     = 3
+                  BackoffRate     = 2
+                  JitterStrategy  = "FULL"
+                }
+              ]
+              End = true
+            }
+          }
+        },
+
+        {
+          StartAt = "Summary"
+          States = {
+            Summary = {
+              Type     = "Task"
+              Resource = "arn:aws:states:::lambda:invoke"
+              Output   = "{% $states.result.Payload %}"
+              Arguments = {
+                FunctionName = module.llm_lambda.lambda_arn
+                Payload      = "{% $merge([$states.input, { 'contentType': 'SimulateRetry', 'jobName': 'SimulateRetry' }]) %}"
+              }
+              Retry = [
+                {
+                  ErrorEquals = [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ]
+                  IntervalSeconds = 1
+                  MaxAttempts     = 3
+                  BackoffRate     = 2
+                  JitterStrategy  = "FULL"
+                }
+              ]
+              End = true
+            }
+          }
+        }
+
+      ]
+
+      Output = "{% $merge($states.input) %}"
+      Next   = "MarkAsCompleted"
+    }
+
+    MarkAsCompleted = {
+      Type     = "Task"
+      Resource = "arn:aws:states:::lambda:invoke"
+      Output   = "{% $states.result.Payload %}"
+      Arguments = {
+        FunctionName = module.status_lambda.lambda_arn
+        Payload      = "{% $merge([$states.input, { 'status': 'completed' }]) %}"
+      }
+      Retry = [
+        {
+          ErrorEquals = [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ]
+          IntervalSeconds = 1
+          MaxAttempts     = 3
+          BackoffRate     = 2
+          JitterStrategy  = "FULL"
+        }
+      ]
+      Next = "EndWorkflow"
+    }
+
+    EndWorkflow = {
+      Type = "Succeed"
+    }
+  }
+})
 }
 
 # event bridge configuration
