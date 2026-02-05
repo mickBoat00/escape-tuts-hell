@@ -95,15 +95,36 @@ def handle_workflow_retry(event: Dict[str, Any]) -> Dict[str, Any]:
         if field not in event:
             raise ValueError(f"Missing required field: {field}")
 
+    tutorial_id = event["tutorialId"]
+    
+    client = MongoClient(os.environ["MONGODB_URI"])
+    db = client[os.environ["MONGODB_DB"]]
+    tutorial = db["tutorials"].find_one({"_id": ObjectId(tutorial_id)})
+    
+    if not tutorial:
+        raise ValueError(f"Tutorial {tutorial_id} not found")
+    
+    transcript_data = tutorial.get("transcript", {})
+    transcript = (
+        transcript_data.get("text") 
+        if isinstance(transcript_data, dict) 
+        else transcript_data
+    )
+    
+    coding_check = tutorial.get("codingTutorialCheck", {})
+    is_coding_tutorial = coding_check.get("isCodingTutorial", False)
+
     return {
         "statusCode": 200,
-        "tutorialId": event["tutorialId"],
+        "tutorialId": tutorial_id,
         "jobName": event["jobName"],
-        "isRetry": event["isRetry"]
+        "isRetry": True,
+        "simulateRetry": False,
+        "transcript": transcript,
+        "isCodingTutorial": is_coding_tutorial
     }
 
 def lambda_handler(event, context):
-    client = None
     tutorial_id = None
     
     try:
