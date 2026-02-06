@@ -1,3 +1,4 @@
+import type { JobState } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { CheckCircle2, Clock, Loader2, type LucideIcon } from 'lucide-react';
 
@@ -5,7 +6,7 @@ interface PhaseCardProps {
   icon: LucideIcon;
   title: string;
   description: string;
-  status: "pending" | "running" | "completed" | "failed";
+  status: JobState;
   isActive: boolean;
   progress?: number;
   timeEstimate?: string;

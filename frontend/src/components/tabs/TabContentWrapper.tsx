@@ -5,7 +5,7 @@ interface TabContentWrapperProps {
     tutorialId: string;
     isLoading?: boolean;
     jobName: string;
-    error?: string;
+    error?: string | null;
     isRetrying: boolean;
     onRetry: ()=> void;
     children: React.ReactNode;

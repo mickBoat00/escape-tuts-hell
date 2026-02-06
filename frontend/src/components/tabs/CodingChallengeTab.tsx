@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 interface CodingChallengeTabProps {
-  challenge?: CodingChallengeOutput;
+  challenge?: CodingChallengeOutput | null;
 }
 
 const CodingChallengeTab: React.FC<CodingChallengeTabProps> = ({ challenge }) => {

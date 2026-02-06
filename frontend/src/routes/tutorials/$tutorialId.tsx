@@ -6,20 +6,17 @@ import { deleteTutorial, getTutorial, retryContentGeneration } from '@/lib/api';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { AlertCircle, Loader2, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import type { PhaseStatus, Tutorial } from '@/lib/types';
-import { Tabs, TabsContent, TabsList, } from '@radix-ui/react-tabs';
+import type { JobState, Tutorial } from '@/lib/types';
+import { Tabs, TabsContent, TabsList } from '@radix-ui/react-tabs';
 import DesktopTabTrigger from '@/components/DesktopTabTrigger';
 import CodingChallengeTab from '@/components/tabs/CodingChallengeTab';
 import QuestionAndAnwsers from '@/components/tabs/QuestionAndAnwsers';
 import TabContentWrapper from '@/components/tabs/TabContentWrapper';
 import { toast } from 'react-toastify';
 
-
 export interface TabConfig {
   value: string;
   label: string;
-  // errorKey?: string;
-  // feature?: FeatureName;
 }
 
 export const Route = createFileRoute('/tutorials/$tutorialId')({
@@ -34,7 +31,7 @@ function RouteComponent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("challenge");
+  const [activeTab, setActiveTab] = useState('challenge');
 
   const [retryingJobs, setRetryingJobs] = useState<Record<string, boolean>>({
     challenge: false,
@@ -44,16 +41,9 @@ function RouteComponent() {
 
   const handleRetry = async (jobName: string) => {
     setRetryingJobs(prev => ({ ...prev, [jobName]: true }));
-
     try {
-      const response = await retryContentGeneration(tutorialId, jobName);
-      
-      console.log('Retry initiated:', response);
-      
-      
-    } catch (error) {
-      console.error('Retry failed:', error);
-      
+      await retryContentGeneration(tutorialId, jobName);
+    } catch {
       toast.error('Failed to retry. Please try again.');
       setRetryingJobs(prev => ({ ...prev, [jobName]: false }));
     }
@@ -62,12 +52,9 @@ function RouteComponent() {
   const fetchTutorial = async (showLoader = false) => {
     try {
       if (showLoader) setIsLoading(true);
-
       const data = await getTutorial(tutorialId);
-      console.log('tutorial obj', data)
       setTutorial(data);
       setError(null);
-
       return data;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load tutorial');
@@ -85,18 +72,13 @@ function RouteComponent() {
     if (!tutorial) return;
 
     const isTerminal =
-      tutorial.status === 'completed' ||
-      tutorial.status === 'failed';
+      tutorial.status === 'completed' || tutorial.status === 'failed';
 
     if (isTerminal) return;
 
     const interval = setInterval(async () => {
       const updated = await fetchTutorial(false);
-
-      if (
-        updated?.status === 'completed' ||
-        updated?.status === 'failed'
-      ) {
+      if (updated?.status === 'completed' || updated?.status === 'failed') {
         clearInterval(interval);
       }
     }, 3000);
@@ -110,11 +92,9 @@ function RouteComponent() {
     const confirmed = window.confirm(
       'Are you sure you want to delete this Tutorial? This action cannot be undone.'
     );
-
     if (!confirmed) return;
 
     setIsDeleting(true);
-
     try {
       await deleteTutorial(tutorialId);
       navigate({ to: '/tutorials' });
@@ -164,164 +144,146 @@ function RouteComponent() {
 
   if (!tutorial) return null;
 
-  const transcriptionStatus: PhaseStatus =
+  const transcriptionStatus: JobState =
     tutorial.jobStatus?.transcription ?? 'pending';
-    const generationStatus: PhaseStatus = (() => {
-      if (!tutorial.jobStatus) return "pending";
 
-      const statuses = Object.values(tutorial.jobStatus);
+  const generationStatus: JobState = (() => {
+    const jobs = [
+      tutorial.jobStatus.codingChallenge,
+      tutorial.jobStatus.tutorialQA,
+      tutorial.jobStatus.summary,
+    ];
 
-      if (statuses.includes("running")) return "running";
-      if (statuses.includes("failed")) return "failed";
-      if (statuses.every(s => s === "completed")) return "completed";
+    if (jobs.includes('running')) return 'running';
+    if (jobs.includes('failed')) return 'failed';
+    if (jobs.every(j => j === 'completed')) return 'completed';
+    return 'pending';
+  })();
 
-      return "pending";
-    })();
+  const isProcessing =
+    tutorial.status === 'uploading' || tutorial.status === 'processing';
 
+  const isCompleted = tutorial.status === 'completed';
+  const hasFailed = tutorial.status === 'failed';
 
-  const isProcessing = tutorial.status === "processing";
-  const isCompleted = tutorial.status === "completed";
-  const hasFailed = tutorial.status === "failed";
-  const showGenerating = isProcessing && generationStatus === "running";
-  
-  
+  const isCodingTutorial =
+    tutorial.codingTutorialCheck?.isCodingTutorial === true;
+
+  const hasCodingCheckResult =
+    tutorial.codingTutorialCheck !== null &&
+    tutorial.codingTutorialCheck !== undefined;
+
+  const showGenerating = isProcessing && generationStatus === 'running';
+
   const PROJECT_TABS: TabConfig[] = [
-    {
-      value: "challenge",
-      label: "Coding Challenge",
-    },
-
-    {
-      value: "qnas",
-      label: "Question And Answers",
-    },
-
-    {
-      value: "retry",
-      label: "Stimulate Retry",
-    },
-
+    { value: 'challenge', label: 'Coding Challenge' },
+    { value: 'qnas', label: 'Question And Answers' },
+    { value: 'retry', label: 'Stimulate Retry' },
   ];
-    
 
   return (
     <div className="container max-w-6xl mx-auto py-10 px-4">
       <div className="mb-8 flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <h1 className="text-3xl font-bold wrap-break-word">
-            {tutorial.fileName}
-          </h1>
-        </div>
+        <h1 className="text-3xl font-bold">{tutorial.fileName}</h1>
 
         <Button
           size="lg"
           onClick={handleDelete}
           disabled={isDeleting}
-          className="gradient-emerald text-white hover-glow px-6 transition-all"
+          className="gradient-emerald text-white"
         >
           {isDeleting ? (
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
           ) : (
             <Trash2 className="h-4 w-4 mr-2" />
           )}
-          <span className="font-semibold">Delete</span>
+          Delete
         </Button>
       </div>
 
       <div className="grid gap-6">
         <TutorialStatusCard tutorial={tutorial} />
 
-        {
-          isProcessing && (
-            <ProcessingFlow
-              transcriptionStatus={transcriptionStatus}
-              generationStatus={generationStatus}
-              fileDuration={tutorial.fileDuration}
-              createdAt={tutorial.createdAt}
-            />
-          )
-        }
+        {isProcessing && (
+          <ProcessingFlow
+            transcriptionStatus={transcriptionStatus}
+            generationStatus={generationStatus}
+            fileDuration={tutorial.fileDuration}
+            createdAt={tutorial.createdAt}
+          />
+        )}
 
-        {hasFailed && tutorial.error && (
-          <Card className="border-destructive">
+        {isCompleted && hasCodingCheckResult && !isCodingTutorial && (
+          <Card className="border-amber-300 bg-amber-50">
             <CardHeader>
-              <CardTitle className="text-destructive">Error</CardTitle>
+              <CardTitle className="text-amber-700">
+                Not a Coding Tutorial
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm">Processing failed</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Please try uploading again or contact support if the issue persists.
+            <CardContent className="space-y-2">
+              <p className="text-sm text-amber-800">
+                This video was analyzed successfully, but it is not a
+                coding-related tutorial.
+              </p>
+              <p className="text-sm italic text-muted-foreground">
+                Reason: {tutorial.codingTutorialCheck?.reason}
               </p>
             </CardContent>
           </Card>
         )}
 
-        {
-          (showGenerating || isCompleted) && (
-            <Tabs
-              value={activeTab}
-              onValueChange={setActiveTab}
-              className="w-full"
-            >
+        {(showGenerating || (isCompleted && isCodingTutorial)) && (
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <div className="hidden lg:block mb-6">
+              <TabsList className="flex gap-2">
+                {PROJECT_TABS.map(tab => (
+                  <DesktopTabTrigger
+                    key={tab.value}
+                    tab={tab}
+                    tutorial={tutorial}
+                  />
+                ))}
+              </TabsList>
+            </div>
 
-              {/* Desktop Tabs */}
-              <div className="glass-card rounded-2xl p-2 mb-6 hidden lg:block">
-                <TabsList className="flex flex-wrap gap-2 bg-transparent min-w-max w-full">
-                  {PROJECT_TABS.map((tab) => (
-                    <DesktopTabTrigger
-                      key={tab.value}
-                      tab={tab}
-                      tutorial={tutorial}
-                    />
-                  ))}
-                </TabsList>
-              </div>
+            <TabsContent value="challenge">
+              <TabContentWrapper
+                tutorialId={tutorialId}
+                jobName="challenge"
+                isLoading={showGenerating}
+                error={tutorial.jobError?.codingChallenge}
+                isRetrying={retryingJobs.challenge}
+                onRetry={() => handleRetry('challenge')}
+              >
+                <CodingChallengeTab challenge={tutorial.codingChallenge} />
+              </TabContentWrapper>
+            </TabsContent>
 
-                <TabsContent value="challenge" className="space-y-4">
-                  <TabContentWrapper
-                    tutorialId={tutorialId}
-                    jobName='challenge'
-                    isLoading={showGenerating}
-                    error={tutorial.jobError?.codingChallenge}
-                    isRetrying={retryingJobs.challenge}
-                    onRetry={() => handleRetry('challenge')}
-                  >
-                    <CodingChallengeTab challenge={tutorial.codingChallenge}/>
-                  </TabContentWrapper>
-                </TabsContent>
+            <TabsContent value="qnas">
+              <TabContentWrapper
+                tutorialId={tutorialId}
+                jobName="qnas"
+                isLoading={showGenerating}
+                error={tutorial.jobError?.tutorialQA}
+                isRetrying={retryingJobs.qnas}
+                onRetry={() => handleRetry('qnas')}
+              >
+                <QuestionAndAnwsers quiz={tutorial.tutorialQA} />
+              </TabContentWrapper>
+            </TabsContent>
+          </Tabs>
+        )}
 
-                <TabsContent value="qnas" className="space-y-4">
-                  <TabContentWrapper
-                    tutorialId={tutorialId}
-                    jobName='qnas'
-                    isLoading={showGenerating}
-                    error={tutorial.jobError?.tutorialQA}
-                    isRetrying={retryingJobs.tutorialQA}
-                    onRetry={() => handleRetry('qnas')}
-                  >
-                    <QuestionAndAnwsers quiz={tutorial.tutorialQA} />
-                  </TabContentWrapper>
-                </TabsContent>
-
-                <TabsContent value="retry" className="space-y-4">
-                  <TabContentWrapper
-                    tutorialId={tutorialId}
-                    jobName='retry'
-                    isLoading={showGenerating}
-                    error={tutorial.jobError?.summary}
-                    isRetrying={retryingJobs.summary}
-                    onRetry={() => handleRetry('summary')}
-                  >
-                    <h1>Just a summary</h1>
-                  </TabContentWrapper>
-                </TabsContent>
-
-            </Tabs>
-          )
-        }
-
-
-
+        {hasFailed && (
+          <Card className="border-destructive">
+            <CardHeader>
+              <CardTitle className="text-destructive">Processing Failed</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Please try again or contact support.</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

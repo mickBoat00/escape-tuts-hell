@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import PhaseCard from './PhaseCard'
 import { Badge, ChevronDown, FileText, Sparkles, FileQuestionMark } from 'lucide-react'
-import type { PhaseStatus } from '@/lib/types';
+import type { JobState } from '@/lib/types';
 import { estimateAssemblyAITime, formatTimeRange } from '@/lib/processing-time';
 import FeatureItem from './FeatureItem';
 
+
+
 interface ProcessingFlowProps {
-  transcriptionStatus: PhaseStatus;
-  generationStatus: PhaseStatus;
-  fileDuration?: number;
+    
+  transcriptionStatus: JobState;
+  generationStatus: JobState;
+  fileDuration?: number | null;
   createdAt: string;
 }
 
@@ -47,6 +50,7 @@ const ProcessingFlow = ({
         transcriptionStatus === "pending" || transcriptionStatus === "running";
     const isGenerating = generationStatus === "running";
     const generationComplete = generationStatus === "completed";
+    const showPhase2 = transcriptionComplete;
 
 
     const getTranscriptionDescription = useCallback(() => {
@@ -130,56 +134,62 @@ const ProcessingFlow = ({
             </div>
         </div>
 
-        <PhaseCard
-            icon={Sparkles}
-            title="Phase 2: AI Generation"
-            description={getGenerationDescription()}
-            status={generationStatus}
-            isActive={isGenerating}
-        >
-            {isGenerating &&
-                (
-                    <div className="space-y-3 pt-2">
-                        {availableFeatures.map((feature, idx) => {
-                        const isActive = idx === currentOutputIndex;
-
-                        return (
-                            <FeatureItem
-                            key={feature.name}
-                            name={feature.name}
-                            description={feature.description}
-                            icon={feature.icon}
-                            isActive={isActive}
-                            />
-                        );
-                        })}
-
-                        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 text-center mt-6 border-2 border-emerald-200 shadow-lg">
-                        <p className="text-sm text-gray-700 leading-relaxed">
-                            <span className="font-bold text-emerald-600 text-base">
-                            Powered by AWS step functions
-                            </span>{" "}
-                            — AI is generating {availableFeatures.length} output
-                            {availableFeatures.length > 1 ? "s" : ""} simultaneously
-                        </p>
-                        </div>
-                    </div>
-                )
-            }
-
-            {generationComplete && (
-            <div className="flex flex-wrap items-center gap-3 pt-4">
-                {availableFeatures.map((feature) => (
-                <Badge
-                    key={feature.name}
-                    className="text-sm px-4 py-2 gradient-emerald text-white shadow-md"
+        {
+            showPhase2 && (
+                <PhaseCard
+                    icon={Sparkles}
+                    title="Phase 2: AI Generation"
+                    description={getGenerationDescription()}
+                    status={generationStatus}
+                    isActive={isGenerating}
                 >
-                    {feature.name}
-                </Badge>
-                ))}
-            </div>
-            )}
-        </PhaseCard>
+                    {isGenerating &&
+                        (
+                            <div className="space-y-3 pt-2">
+                                {availableFeatures.map((feature, idx) => {
+                                const isActive = idx === currentOutputIndex;
+
+                                return (
+                                    <FeatureItem
+                                    key={feature.name}
+                                    name={feature.name}
+                                    description={feature.description}
+                                    icon={feature.icon}
+                                    isActive={isActive}
+                                    />
+                                );
+                                })}
+
+                                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 text-center mt-6 border-2 border-emerald-200 shadow-lg">
+                                <p className="text-sm text-gray-700 leading-relaxed">
+                                    <span className="font-bold text-emerald-600 text-base">
+                                    Powered by AWS step functions
+                                    </span>{" "}
+                                    — AI is generating {availableFeatures.length} output
+                                    {availableFeatures.length > 1 ? "s" : ""} simultaneously
+                                </p>
+                                </div>
+                            </div>
+                        )
+                    }
+
+                    {generationComplete && (
+                    <div className="flex flex-wrap items-center gap-3 pt-4">
+                        {availableFeatures.map((feature) => (
+                        <Badge
+                            key={feature.name}
+                            className="text-sm px-4 py-2 gradient-emerald text-white shadow-md"
+                        >
+                            {feature.name}
+                        </Badge>
+                        ))}
+                    </div>
+                    )}
+                </PhaseCard>
+
+            )
+        }
+        
 
         
     </div>

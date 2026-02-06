@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@radix-ui/react-select'
 
 interface QuestionAndAnswersProps {
-  quiz?: CodingInterviewQA
+  quiz?: CodingInterviewQA | null;
 }
 
 const QuestionAndAnswers = ({ quiz }: QuestionAndAnswersProps) => {

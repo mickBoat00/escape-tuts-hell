@@ -1,4 +1,4 @@
-export function estimateAssemblyAITime(durationSeconds?: number) {
+export function estimateAssemblyAITime(durationSeconds?: number | null) {
   if (!durationSeconds) {
     durationSeconds = 1800; // Fallback: 30 min
   }

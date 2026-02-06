@@ -27,7 +27,6 @@ class JobState(str, Enum):
 
 class TutorialStatus(str, Enum):
     uploading = "uploading"
-    uploaded = "uploaded"
     processing = "processing"
     retrying = "retrying"
     completed = "completed"

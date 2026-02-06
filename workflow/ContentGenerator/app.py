@@ -86,6 +86,7 @@ def simulate_failure_for_retry(tutorial_id, db_field, content_type):
 
 
 def lambda_handler(event, context):
+    print('event', event)
     tutorial_id = event.get("tutorialId")
     content_type = event.get("contentType")
     job_name = event.get("jobName")
