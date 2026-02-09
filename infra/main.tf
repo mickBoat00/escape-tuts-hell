@@ -295,7 +295,7 @@ module "step_function" {
             JitterStrategy  = "FULL"
           },
           {
-            ErrorEquals     = ["CodingTutorialCheckerTransientError"]
+            ErrorEquals     = ["States.TaskFailed"]
             IntervalSeconds = 30
             MaxAttempts     = 3
             BackoffRate     = 2
@@ -305,10 +305,10 @@ module "step_function" {
         Catch = [
           {
             ErrorEquals = ["States.ALL"]
-            Next        = "FailWorkflow"
+            Next        = "MarkAsCompleted"
           }
         ]
-        
+
         Next = "IsCodingTutorial"
       },
       IsCodingTutorial = {
