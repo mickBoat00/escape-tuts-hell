@@ -178,7 +178,7 @@ function RouteComponent() {
   const PROJECT_TABS: TabConfig[] = [
     { value: 'challenge', label: 'Coding Challenge' },
     { value: 'qnas', label: 'Question And Answers' },
-    { value: 'retry', label: 'Stimulate Retry' },
+    { value: 'summary', label: 'Summary' },
   ];
 
   console.log('Tutorial', tutorial)
@@ -273,6 +273,19 @@ function RouteComponent() {
                 <QuestionAndAnwsers quiz={tutorial.tutorialQA} />
               </TabContentWrapper>
             </TabsContent>
+
+            <TabsContent value="summary">
+              <TabContentWrapper
+                tutorialId={tutorialId}
+                jobName="summary"
+                isLoading={showGenerating}
+                error={tutorial.jobError?.summary}
+                isRetrying={retryingJobs.summary}
+                onRetry={() => handleRetry('summary')}
+              >
+                <p>Summary here</p>
+              </TabContentWrapper>
+            </TabsContent>
           </Tabs>
         )}
 
@@ -282,7 +295,7 @@ function RouteComponent() {
               <CardTitle className="text-destructive">Processing Failed</CardTitle>
             </CardHeader>
             <CardContent>
-              <p>Please try again or contact support.</p>
+              <p>{tutorial.error?.message}.</p>
             </CardContent>
           </Card>
         )}

@@ -1,6 +1,6 @@
 import type { Tutorial } from "@/lib/types"
-import { cn, formatDate, formatDuration, formatFileSize, getProcessingPhaseLabel, getStatusIcon } from "@/lib/utils"
-import { Badge, FileAudio } from "lucide-react"
+import { cn, formatDate, } from "@/lib/utils"
+import { FileAudio } from "lucide-react"
 
 
 interface TutorialProps {
@@ -9,8 +9,6 @@ interface TutorialProps {
 
 
 const TutorialCard = ({tutorial}: TutorialProps) => {
-    const StatusIcon = getStatusIcon(tutorial.status);
-    const processingPhase = getProcessingPhaseLabel(tutorial);
   return (
     <a href={`/tutorials/${tutorial._id}`} className="block">
       <div
@@ -40,56 +38,14 @@ const TutorialCard = ({tutorial}: TutorialProps) => {
                     {formatDate(tutorial.createdAt)}
                   </p>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  {tutorial.status !== "failed" && (
-                    <Badge
-                      className={cn(
-                        "flex items-center gap-2 h-9 md:h-10 text-sm md:text-base px-4 whitespace-nowrap font-bold shadow-md",
-                        tutorial.status === "processing" &&
-                          "gradient-emerald text-white animate-pulse-emerald",
-                      )}
-                    >
-                      <StatusIcon
-                        className={`h-4 w-4 md:h-5 md:w-5 ${tutorial.status === "processing" ? "animate-spin" : ""}`}
-                      />
-                      <span className="hidden md:inline">
-                        {processingPhase}
-                      </span>
-                      <span className="md:hidden">
-                        {tutorial.status === "processing"
-                          ? tutorial.jobStatus?.transcription === "running"
-                            ? "Trans"
-                            : "Gen"
-                          : tutorial.status}
-                      </span>
-                    </Badge>
-                  )}
             </div>
-            </div>
-
-             <div className="flex items-center gap-3 flex-wrap">
-                <Badge className="text-xs font-semibold bg-emerald-100 text-emerald-700 border-emerald-200">
-                  {formatFileSize(tutorial.fileSize)}
-                </Badge>
-                <Badge className="text-xs font-semibold bg-emerald-100 text-emerald-700 border-emerald-200 uppercase">
-                  {tutorial.fileFormat}
-                </Badge>
-                {tutorial.fileDuration && (
-                  <Badge className="text-xs font-semibold bg-emerald-100 text-emerald-700 border-emerald-200">
-                    {formatDuration(tutorial.fileDuration)}
-                  </Badge>
-                )}
-              </div>
-               
-
-
 
 
               {/* Error Message */}
               {tutorial.status === "failed" && tutorial.error && (
                 <div className="mt-2 p-4 rounded-xl bg-red-50 border-2 border-red-200">
                   <p className="text-sm text-red-700 font-semibold">
-                    {tutorial.error.message}
+                    {tutorial.error?.message}
                   </p>
                 </div>
               )}

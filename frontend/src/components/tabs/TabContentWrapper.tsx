@@ -22,6 +22,8 @@ const TabContentWrapper = ({
     children 
 }: TabContentWrapperProps) => {
 
+  console.log('jobs error', jobName, error,)
+
     if (isLoading) {
         return (
             <TabSkeleton    />

@@ -45,6 +45,13 @@ CONTENT_GENERATORS = {
     },
 }
 
+JOB_NAME_TO_CONTENT_TYPE = {
+    "challenge": "CodingChallenge",
+    "qnas": "TutorialQA",
+    "summary": "SimulateRetry",
+    "codingTutorialCheck": "CodingTutorialChecker",
+}
+
 
 def simulate_failure_for_retry(tutorial_id, db_field, content_type):
     """Simulate a failure for retry testing purposes"""
@@ -95,9 +102,7 @@ def is_transient_llm_error(e: Exception) -> bool:
     ])
 
 
-
 def lambda_handler(event, context):
-    print('event', event)
     tutorial_id = event.get("tutorialId")
     content_type = event.get("contentType")
     job_name = event.get("jobName")
@@ -105,15 +110,12 @@ def lambda_handler(event, context):
     transcript = event.get("transcript")
     simulate_retry = event.get("simulateRetry", False)
 
+    config = None
+    db_field = None
+
     try:
         if not tutorial_id:
             raise ValueError("tutorialId missing from state input")
-
-        if content_type not in CONTENT_GENERATORS:
-            raise ValueError(f"Invalid contentType: {content_type}")
-
-        config = CONTENT_GENERATORS[content_type]
-        db_field = config["db_field"]
 
         # RETRY VALIDATION LOGIC
         if is_retry:
@@ -121,32 +123,62 @@ def lambda_handler(event, context):
                 f"Retry attempt detected | jobName={job_name} | contentType={content_type}"
             )
 
-            if content_type != job_name:
-                return {
-                    "success": False,
-                    "skipped": True,
-                    "reason": "contentType does not match jobName",
-                    "tutorialId": tutorial_id,
-                    "isRetry": is_retry,
-                    "simulateRetry": simulate_retry,
-                }
-
+            # Fetch tutorial early to get isCodingTutorial for choice state
             tutorial = tutorials.find_one({"_id": ObjectId(tutorial_id)})
             if not tutorial:
                 raise ValueError("Tutorial not found")
+            
+            is_coding_tutorial = tutorial.get("codingTutorialCheck", {}).get("isCodingTutorial", False)
+
+            # Map job name to expected content type
+            expected_content_type = JOB_NAME_TO_CONTENT_TYPE.get(job_name)
+            
+            if not expected_content_type:
+                logging.error(f"Unknown jobName: {job_name}")
+                return {
+                    "success": False,
+                    "skipped": True,
+                    "reason": f"Unknown jobName: {job_name}",
+                    "tutorialId": tutorial_id,
+                    "isRetry": is_retry,
+                    "isCodingTutorial": is_coding_tutorial,
+                }
+            
+            # Check if the content type matches what we expect for this job
+            if content_type != expected_content_type:
+                logging.warning(
+                    f"contentType mismatch: got '{content_type}', expected '{expected_content_type}' for jobName '{job_name}'"
+                )
+                return {
+                    "success": False,
+                    "skipped": True,
+                    "reason": f"contentType '{content_type}' does not match expected '{expected_content_type}' for jobName '{job_name}'",
+                    "tutorialId": tutorial_id,
+                    "isRetry": is_retry,
+                    "isCodingTutorial": is_coding_tutorial,
+                }
+
+            # Validate content type exists
+            if content_type not in CONTENT_GENERATORS:
+                raise ValueError(f"Invalid contentType: {content_type}")
+
+            config = CONTENT_GENERATORS[content_type]
+            db_field = config["db_field"]
 
             job_status = tutorial.get("jobStatus", {}).get(db_field)
 
             if job_status != "failed":
+                logging.warning(f"Retry blocked - jobStatus is '{job_status}', not 'failed'")
                 return {
                     "success": False,
                     "skipped": True,
                     "reason": f"Retry blocked — jobStatus is '{job_status}'",
                     "tutorialId": tutorial_id,
                     "isRetry": is_retry,
-                    "simulateRetry": simulate_retry,
+                    "isCodingTutorial": is_coding_tutorial,
                 }
 
+            # Update status to retrying
             tutorials.update_one(
                 {"_id": ObjectId(tutorial_id)},
                 {
@@ -157,10 +189,22 @@ def lambda_handler(event, context):
                     }
                 },
             )
+            
+            logging.info(f"Retry validation passed for {job_name}")
+
+        else:
+            # Normal execution (not retry) - validate content type
+            if content_type not in CONTENT_GENERATORS:
+                raise ValueError(f"Invalid contentType: {content_type}")
+            
+            config = CONTENT_GENERATORS[content_type]
+            db_field = config["db_field"]
 
         # Get transcript from event or database
         if not transcript:
-            tutorial = tutorials.find_one({"_id": ObjectId(tutorial_id)})
+            if not is_retry:  # Only fetch if we haven't already
+                tutorial = tutorials.find_one({"_id": ObjectId(tutorial_id)})
+            
             transcript_obj = tutorial.get("transcript")
 
             if isinstance(transcript_obj, dict):
@@ -178,7 +222,6 @@ def lambda_handler(event, context):
                 "success": True,
                 "tutorialId": tutorial_id,
                 "transcript": transcript,
-                # "contentType": content_type,
                 "simulateRetry": simulate_retry,
                 "simulated": True
             }
@@ -243,7 +286,6 @@ def lambda_handler(event, context):
         return {
             "success": True,
             "tutorialId": tutorial_id,
-            # "contentType": content_type,
             "jobName": job_name,
             "isRetry": is_retry,
             "simulateRetry": simulate_retry,
@@ -252,33 +294,32 @@ def lambda_handler(event, context):
 
     except Exception as e:
         error_msg = str(e)
-        logging.error(f"ERROR in {content_type}: {error_msg}")
+        logging.error(f"ERROR in {content_type}: {error_msg}", exc_info=True)
 
-        is_transient = is_transient_llm_error(e)
+        if db_field and tutorial_id:
+            is_transient = is_transient_llm_error(e)
 
-        tutorials.update_one(
-            {"_id": ObjectId(tutorial_id)},
-            {
-                "$set": {
-                    f"jobStatus.{db_field}": "failed",
-                    f"jobError.{db_field}": error_msg,
-                    "updatedAt": datetime.utcnow(),
+            tutorials.update_one(
+                {"_id": ObjectId(tutorial_id)},
+                {
+                    "$set": {
+                        f"jobStatus.{db_field}": "failed",
+                        f"jobError.{db_field}": error_msg,
+                        "updatedAt": datetime.utcnow(),
+                    }
+                },
+            )
+
+            if is_transient and content_type != "CodingTutorialChecker":
+                return {
+                    "success": False,
+                    "retryable": True,
+                    "tutorialId": tutorial_id,
+                    "contentType": content_type,
+                    "error": error_msg,
                 }
-            },
-        )
 
-        if is_transient and content_type != "CodingTutorialChecker":
-            return {
-                "success": False,
-                "retryable": True,
-                "tutorialId": tutorial_id,
-                "contentType": content_type,
-                "error": error_msg,
-            }
-
-        # Automatic retry ONLY for CodingTutorialChecker
-        if content_type == "CodingTutorialChecker" and is_transient:
-            raise Exception("CodingTutorialCheckerTransientError")
+            if content_type == "CodingTutorialChecker" and is_transient:
+                raise Exception("CodingTutorialCheckerTransientError")
 
         raise
-
