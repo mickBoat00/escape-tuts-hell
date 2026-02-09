@@ -293,8 +293,22 @@ module "step_function" {
             MaxAttempts     = 3
             BackoffRate     = 2
             JitterStrategy  = "FULL"
+          },
+          {
+            ErrorEquals     = ["CodingTutorialCheckerTransientError"]
+            IntervalSeconds = 30
+            MaxAttempts     = 3
+            BackoffRate     = 2
           }
         ]
+
+        Catch = [
+          {
+            ErrorEquals = ["States.ALL"]
+            Next        = "FailWorkflow"
+          }
+        ]
+        
         Next = "IsCodingTutorial"
       },
       IsCodingTutorial = {

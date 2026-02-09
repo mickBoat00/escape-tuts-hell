@@ -181,6 +181,8 @@ function RouteComponent() {
     { value: 'retry', label: 'Stimulate Retry' },
   ];
 
+  console.log('Tutorial', tutorial)
+
   return (
     <div className="container max-w-6xl mx-auto py-10 px-4">
       <div className="mb-8 flex items-start justify-between gap-4">

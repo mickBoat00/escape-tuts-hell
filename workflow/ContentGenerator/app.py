@@ -85,6 +85,17 @@ def simulate_failure_for_retry(tutorial_id, db_field, content_type):
     return error_message
 
 
+def is_transient_llm_error(e: Exception) -> bool:
+    msg = str(e)
+    return any(code in msg for code in [
+        "503",
+        "UNAVAILABLE",
+        "high demand",
+        "Rate limit",
+    ])
+
+
+
 def lambda_handler(event, context):
     print('event', event)
     tutorial_id = event.get("tutorialId")
@@ -243,22 +254,31 @@ def lambda_handler(event, context):
         error_msg = str(e)
         logging.error(f"ERROR in {content_type}: {error_msg}")
 
-        if tutorial_id and content_type in CONTENT_GENERATORS:
-            tutorials.update_one(
-                {"_id": ObjectId(tutorial_id)},
-                {
-                    "$set": {
-                        f"jobStatus.{CONTENT_GENERATORS[content_type]['db_field']}": "failed",
-                        f"jobError.{CONTENT_GENERATORS[content_type]['db_field']}": error_msg,
-                        "status": "failed",
-                        "error": {
-                            "step": content_type,
-                            "message": error_msg,
-                            "timestamp": datetime.utcnow(),
-                        },
-                        "updatedAt": datetime.utcnow(),
-                    }
-                },
-            )   
+        is_transient = is_transient_llm_error(e)
+
+        tutorials.update_one(
+            {"_id": ObjectId(tutorial_id)},
+            {
+                "$set": {
+                    f"jobStatus.{db_field}": "failed",
+                    f"jobError.{db_field}": error_msg,
+                    "updatedAt": datetime.utcnow(),
+                }
+            },
+        )
+
+        if is_transient and content_type != "CodingTutorialChecker":
+            return {
+                "success": False,
+                "retryable": True,
+                "tutorialId": tutorial_id,
+                "contentType": content_type,
+                "error": error_msg,
+            }
+
+        # Automatic retry ONLY for CodingTutorialChecker
+        if content_type == "CodingTutorialChecker" and is_transient:
+            raise Exception("CodingTutorialCheckerTransientError")
 
         raise
+
