@@ -248,3 +248,8 @@ class TutorialModel(BaseModel):
             ObjectId: str,
             datetime: lambda v: v.isoformat()
         }
+
+
+class RetryRequest(BaseModel):
+    tutorialId: str
+    jobName: str 
