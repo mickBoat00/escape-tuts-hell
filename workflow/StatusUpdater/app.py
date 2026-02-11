@@ -1,7 +1,7 @@
 import logging
 import os
 import re
-from typing import Literal, Dict, Any
+from typing import Dict, Any
 from urllib.parse import quote
 from pymongo import MongoClient
 from bson import ObjectId

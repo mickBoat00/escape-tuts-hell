@@ -15,6 +15,8 @@ from schemas.coding_tutorial_checker import CodingTutorialCheck
 from schemas.questionnaire import CodingInterviewQA
 from schemas.coding_challenge_schema import CodingChallengeOutput
 from schemas.summary import Summary
+from workflow.ContentGenerator.prompts.follow_along_prompt import FOLLOW_ALONG_GUIDE_PROMPT
+from workflow.ContentGenerator.schemas.follow_along_schema import FollowAlongGuide
 
 logging.basicConfig(level=logging.INFO)
 
@@ -23,6 +25,11 @@ db = client[os.environ["MONGODB_DB"]]
 tutorials = db["tutorials"]
 
 CONTENT_GENERATORS = {
+    "FollowAlongGuide": {
+        "prompt": FOLLOW_ALONG_GUIDE_PROMPT,
+        "schema": FollowAlongGuide,
+        "db_field": "followAlongGuide",
+    },
     "CodingTutorialChecker": {
         "prompt": CODING_TUTORIAL_CHECKER_PROMPT,
         "schema": CodingTutorialCheck,
@@ -38,7 +45,7 @@ CONTENT_GENERATORS = {
         "schema": CodingChallengeOutput,
         "db_field": "codingChallenge",
     },
-    "SimulateRetry": {
+    "Summary": {
         "prompt": SUMMARY_PROMPT,
         "schema": Summary,
         "db_field": "summary",
@@ -46,9 +53,10 @@ CONTENT_GENERATORS = {
 }
 
 JOB_NAME_TO_CONTENT_TYPE = {
+    "FollowAlongGuide": "FollowAlongGuide",
     "challenge": "CodingChallenge",
     "qnas": "TutorialQA",
-    "summary": "SimulateRetry",
+    "summary": "Summary",
     "codingTutorialCheck": "CodingTutorialChecker",
 }
 
@@ -216,7 +224,7 @@ def lambda_handler(event, context):
                 raise ValueError("Transcript unavailable")
 
         # CHECK: Simulate failure for retry testing (only on initial run, not retry)
-        if simulate_retry and content_type == "SimulateRetry" and not is_retry:
+        if simulate_retry and content_type == "Summary" and not is_retry:
             simulate_failure_for_retry(tutorial_id, db_field, content_type)
             return {
                 "success": True,
