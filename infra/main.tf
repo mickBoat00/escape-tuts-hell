@@ -412,7 +412,7 @@ module "step_function" {
             }
           }
         ]
-        Output = "{% $merge($states.input) %}"
+        Output = "{% $states.input %}"
         Next   = "MarkAsCompleted"
       },
       MarkAsCompleted = {
