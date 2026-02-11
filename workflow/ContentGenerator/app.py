@@ -45,7 +45,7 @@ CONTENT_GENERATORS = {
         "schema": FollowAlongGuide,
         "db_field": "followAlongGuide",
     },
-    "Summary": {  # This matches the contentType from Step Functions
+    "Summary": {
         "prompt": SUMMARY_PROMPT,
         "schema": Summary,
         "db_field": "summary",
@@ -150,6 +150,7 @@ def lambda_handler(event, context):
                     "tutorialId": tutorial_id,
                     "isRetry": is_retry,
                     "isCodingTutorial": is_coding_tutorial,
+                    "jobName": job_name,
                 }
             
             if content_type != expected_content_type:
@@ -157,13 +158,14 @@ def lambda_handler(event, context):
                     f"Skipping step: contentType '{content_type}' doesn't match target '{expected_content_type}' for jobName '{job_name}'"
                 )
                 return {
-                    "success": True,  # Changed from False to True
+                    "success": True,  
                     "skipped": True,
                     "reason": f"Skipping {content_type} - retrying {expected_content_type}",
                     "tutorialId": tutorial_id,
                     "isRetry": is_retry,
                     "isCodingTutorial": is_coding_tutorial,
-                    "transcript": transcript,  # Pass through for next steps
+                    "transcript": transcript,  
+                    "jobName": job_name,
                 }
 
             # Validate content type exists
@@ -185,6 +187,7 @@ def lambda_handler(event, context):
                     "isRetry": is_retry,
                     "isCodingTutorial": is_coding_tutorial,
                     "transcript": transcript,
+                    "jobName": job_name,
                 }
 
             # Update status to retrying
@@ -232,7 +235,8 @@ def lambda_handler(event, context):
                 "tutorialId": tutorial_id,
                 "transcript": transcript,
                 "simulateRetry": simulate_retry,
-                "simulated": True
+                "simulated": True,
+                "jobName": job_name,
             }
 
         # NORMAL CONTENT GENERATION

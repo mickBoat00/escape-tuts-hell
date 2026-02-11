@@ -142,6 +142,7 @@ def lambda_handler(event, context):
             "tutorialId": tutorial_id,
             "transcript": transcript_text,
             "isRetry": is_retry,
+            "jobName": job_name,
             "simulateRetry": simulate_retry,
         }
         
