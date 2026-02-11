@@ -10,13 +10,13 @@ from prompts.coding_tutorial_checker_prompt import CODING_TUTORIAL_CHECKER_PROMP
 from prompts.questionnaires_prompt import TUTORIAL_QUESTION_PROMPT
 from prompts.coding_challenge_prompt import CODING_CHALLENGE_PROMPT
 from prompts.simulate_retry import SUMMARY_PROMPT
+from prompts.follow_along_prompt import FOLLOW_ALONG_GUIDE_PROMPT
 
 from schemas.coding_tutorial_checker import CodingTutorialCheck
 from schemas.questionnaire import CodingInterviewQA
 from schemas.coding_challenge_schema import CodingChallengeOutput
 from schemas.summary import Summary
-from workflow.ContentGenerator.prompts.follow_along_prompt import FOLLOW_ALONG_GUIDE_PROMPT
-from workflow.ContentGenerator.schemas.follow_along_schema import FollowAlongGuide
+from schemas.follow_along_schema import FollowAlongGuide
 
 logging.basicConfig(level=logging.INFO)
 
