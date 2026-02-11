@@ -9,14 +9,14 @@ from google import genai
 from prompts.coding_tutorial_checker_prompt import CODING_TUTORIAL_CHECKER_PROMPT
 from prompts.questionnaires_prompt import TUTORIAL_QUESTION_PROMPT
 from prompts.coding_challenge_prompt import CODING_CHALLENGE_PROMPT
-from prompts.simulate_retry import SUMMARY_PROMPT
 from prompts.follow_along_prompt import FOLLOW_ALONG_GUIDE_PROMPT
+from prompts.simulate_retry import SUMMARY_PROMPT
 
 from schemas.coding_tutorial_checker import CodingTutorialCheck
 from schemas.questionnaire import CodingInterviewQA
 from schemas.coding_challenge_schema import CodingChallengeOutput
-from schemas.summary import Summary
 from schemas.follow_along_schema import FollowAlongGuide
+from schemas.summary import Summary
 
 logging.basicConfig(level=logging.INFO)
 
@@ -25,11 +25,6 @@ db = client[os.environ["MONGODB_DB"]]
 tutorials = db["tutorials"]
 
 CONTENT_GENERATORS = {
-    "FollowAlongGuide": {
-        "prompt": FOLLOW_ALONG_GUIDE_PROMPT,
-        "schema": FollowAlongGuide,
-        "db_field": "followAlongGuide",
-    },
     "CodingTutorialChecker": {
         "prompt": CODING_TUTORIAL_CHECKER_PROMPT,
         "schema": CodingTutorialCheck,
@@ -45,7 +40,12 @@ CONTENT_GENERATORS = {
         "schema": CodingChallengeOutput,
         "db_field": "codingChallenge",
     },
-    "Summary": {
+    "FollowAlongGuide": {
+        "prompt": FOLLOW_ALONG_GUIDE_PROMPT,
+        "schema": FollowAlongGuide,
+        "db_field": "followAlongGuide",
+    },
+    "Summary": {  # This matches the contentType from Step Functions
         "prompt": SUMMARY_PROMPT,
         "schema": Summary,
         "db_field": "summary",
@@ -53,11 +53,11 @@ CONTENT_GENERATORS = {
 }
 
 JOB_NAME_TO_CONTENT_TYPE = {
-    "FollowAlongGuide": "FollowAlongGuide",
-    "challenge": "CodingChallenge",
-    "qnas": "TutorialQA",
-    "summary": "Summary",
     "codingTutorialCheck": "CodingTutorialChecker",
+    "tutorialQA": "TutorialQA",
+    "codingChallenge": "CodingChallenge",
+    "followAlongGuide": "FollowAlongGuide",
+    "summary": "Summary", 
 }
 
 
@@ -152,18 +152,18 @@ def lambda_handler(event, context):
                     "isCodingTutorial": is_coding_tutorial,
                 }
             
-            # Check if the content type matches what we expect for this job
             if content_type != expected_content_type:
-                logging.warning(
-                    f"contentType mismatch: got '{content_type}', expected '{expected_content_type}' for jobName '{job_name}'"
+                logging.info(
+                    f"Skipping step: contentType '{content_type}' doesn't match target '{expected_content_type}' for jobName '{job_name}'"
                 )
                 return {
-                    "success": False,
+                    "success": True,  # Changed from False to True
                     "skipped": True,
-                    "reason": f"contentType '{content_type}' does not match expected '{expected_content_type}' for jobName '{job_name}'",
+                    "reason": f"Skipping {content_type} - retrying {expected_content_type}",
                     "tutorialId": tutorial_id,
                     "isRetry": is_retry,
                     "isCodingTutorial": is_coding_tutorial,
+                    "transcript": transcript,  # Pass through for next steps
                 }
 
             # Validate content type exists
@@ -178,12 +178,13 @@ def lambda_handler(event, context):
             if job_status != "failed":
                 logging.warning(f"Retry blocked - jobStatus is '{job_status}', not 'failed'")
                 return {
-                    "success": False,
+                    "success": True,
                     "skipped": True,
                     "reason": f"Retry blocked — jobStatus is '{job_status}'",
                     "tutorialId": tutorial_id,
                     "isRetry": is_retry,
                     "isCodingTutorial": is_coding_tutorial,
+                    "transcript": transcript,
                 }
 
             # Update status to retrying
@@ -297,6 +298,8 @@ def lambda_handler(event, context):
             "jobName": job_name,
             "isRetry": is_retry,
             "simulateRetry": simulate_retry,
+            "transcript": transcript,  # Pass through for subsequent steps
+            "isCodingTutorial": is_coding_tutorial if is_retry else generated_content.get("isCodingTutorial"),
             **generated_content,
         }
 
