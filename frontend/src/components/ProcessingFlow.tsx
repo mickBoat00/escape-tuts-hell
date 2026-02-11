@@ -28,6 +28,18 @@ const availableFeatures = [
         "description": "Generating questions and answers from video",
         "icon": FileQuestionMark, 
         "isActive": true
+    },
+    {
+        "name": "Follow-Along Guide",
+        "description": "Generating a follow-along guide with code snippets",
+        "icon": FileQuestionMark, 
+        "isActive": true
+    },
+    {
+        "name": "Summary",
+        "description": "Generating a concise summary of the tutorial",
+        "icon": FileQuestionMark, 
+        "isActive": true
     }
 ]
 

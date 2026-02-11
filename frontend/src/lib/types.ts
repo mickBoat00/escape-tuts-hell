@@ -31,6 +31,7 @@ export interface JobStatus {
   tutorialQA: JobState;
   codingChallenge: JobState;
   summary: JobState;
+  followAlongGuide: JobState;
 }
 
 export interface JobError {
@@ -39,6 +40,7 @@ export interface JobError {
   tutorialQA?: string | null;
   codingChallenge?: string | null;
   summary?: string | null;
+  followAlongGuide?: string | null;
 }
 
 export interface ErrorInfo {
@@ -132,6 +134,7 @@ export interface Tutorial {
   codingTutorialCheck?: CodingTutorialCheck | null;
   tutorialQA?: CodingInterviewQA | null;
   codingChallenge?: CodingChallengeOutput | null;
+  followAlongGuide?: string | null;
 
   createdAt: string;
   updatedAt?: string | null;
