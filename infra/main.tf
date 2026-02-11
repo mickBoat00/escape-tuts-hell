@@ -325,6 +325,35 @@ module "step_function" {
         Type = "Parallel"
         Branches = [
           {
+            StartAt = "FollowAlongGuide"
+            States = {
+              FollowAlongGuide = {
+                Type     = "Task"
+                Resource = "arn:aws:states:::lambda:invoke"
+                Output   = "{% $states.result.Payload %}"
+                Arguments = {
+                  FunctionName = module.llm_lambda.lambda_arn
+                  Payload      = "{% $merge([$states.input, { 'contentType': 'FollowAlongGuide' }]) %}"
+                }
+                Retry = [
+                  {
+                    ErrorEquals = [
+                      "Lambda.ServiceException",
+                      "Lambda.AWSLambdaException",
+                      "Lambda.SdkClientException",
+                      "Lambda.TooManyRequestsException"
+                    ]
+                    IntervalSeconds = 1
+                    MaxAttempts     = 3
+                    BackoffRate     = 2
+                    JitterStrategy  = "FULL"
+                  }
+                ]
+                End = true
+              }
+            }
+          },
+          {
             StartAt = "TutorialQnA"
             States = {
               TutorialQnA = {
@@ -391,7 +420,7 @@ module "step_function" {
                 Output   = "{% $states.result.Payload %}"
                 Arguments = {
                   FunctionName = module.llm_lambda.lambda_arn
-                  Payload      = "{% $merge([$states.input, { 'contentType': 'SimulateRetry' }]) %}"
+                  Payload      = "{% $merge([$states.input, { 'contentType': 'Summary' }]) %}"
                 }
                 Retry = [
                   {
