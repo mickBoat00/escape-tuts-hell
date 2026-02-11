@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Optional, Literal, List
+from typing import Annotated, Optional, List
 
 from bson import ObjectId
 from pydantic import BaseModel, Field, BeforeValidator
@@ -37,6 +37,7 @@ class JobStatus(BaseModel):
     tutorialQA: JobState = JobState.pending
     codingChallenge: JobState = JobState.pending
     followAlongGuide: JobState = JobState.pending
+    summary: JobState = JobState.pending
 
 
 class JobError(BaseModel):
@@ -45,6 +46,7 @@ class JobError(BaseModel):
     tutorialQA: Optional[str] = None
     codingChallenge: Optional[str] = None
     followAlongGuide: Optional[str] = None
+    summary: Optional[str] = None
 
 
 class Error(BaseModel):
@@ -152,6 +154,12 @@ class FollowAlongGuide(BaseModel):
     milestones: List[Milestone]
     whats_next: Optional[List[str]] = None
 
+class Summary(BaseModel):
+    text: str = Field(
+        description="Summary transcript in a maximum of 6 sentences."
+    )
+
+
 
 class TutorialModel(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
@@ -174,6 +182,7 @@ class TutorialModel(BaseModel):
     tutorialQA: Optional[CodingInterviewQA] = None
     codingChallenge: Optional[CodingChallengeOutput] = None
     followAlongGuide: Optional[FollowAlongGuide] = None
+    summary: Optional[Summary] = None
 
     createdAt: datetime
     updatedAt: Optional[datetime] = None

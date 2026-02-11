@@ -31,11 +31,12 @@ function RouteComponent() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('challenge');
+  const [activeTab, setActiveTab] = useState('followAlongGuide');
 
   const [retryingJobs, setRetryingJobs] = useState<Record<string, boolean>>({
-    challenge: false,
-    qnas: false,
+    followAlongGuide: false, 
+    codingChallenge: false,
+    tutorialQA: false, 
     summary: false,
   });
 
@@ -149,6 +150,7 @@ function RouteComponent() {
 
   const generationStatus: JobState = (() => {
     const jobs = [
+      tutorial.jobStatus.followAlongGuide,
       tutorial.jobStatus.codingChallenge,
       tutorial.jobStatus.tutorialQA,
       tutorial.jobStatus.summary,
@@ -176,8 +178,9 @@ function RouteComponent() {
   const showGenerating = isProcessing && generationStatus === 'running';
 
   const PROJECT_TABS: TabConfig[] = [
-    { value: 'challenge', label: 'Coding Challenge' },
-    { value: 'qnas', label: 'Question And Answers' },
+    { value: 'followAlongGuide', label: 'Follow Along Guide' },
+    { value: 'codingChallenge', label: 'Coding Challenge' },
+    { value: 'tutorialQA', label: 'Question And Answers' },
     { value: 'summary', label: 'Summary' },
   ];
 
@@ -248,27 +251,40 @@ function RouteComponent() {
               </TabsList>
             </div>
 
-            <TabsContent value="challenge">
+            <TabsContent value="followAlongGuide">
               <TabContentWrapper
                 tutorialId={tutorialId}
-                jobName="challenge"
+                jobName="followAlongGuide"
+                isLoading={showGenerating}
+                error={tutorial.jobError?.followAlongGuide}
+                isRetrying={retryingJobs.followAlongGuide}
+                onRetry={() => handleRetry('followAlongGuide')}
+              >
+                <div>Follow along guide</div>
+              </TabContentWrapper>
+            </TabsContent>
+
+            <TabsContent value="codingChallenge">
+              <TabContentWrapper
+                tutorialId={tutorialId}
+                jobName="codingChallenge"
                 isLoading={showGenerating}
                 error={tutorial.jobError?.codingChallenge}
-                isRetrying={retryingJobs.challenge}
-                onRetry={() => handleRetry('challenge')}
+                isRetrying={retryingJobs.codingChallenge}
+                onRetry={() => handleRetry('codingChallenge')}
               >
                 <CodingChallengeTab challenge={tutorial.codingChallenge} />
               </TabContentWrapper>
             </TabsContent>
 
-            <TabsContent value="qnas">
+            <TabsContent value="tutorialQA">
               <TabContentWrapper
                 tutorialId={tutorialId}
-                jobName="qnas"
+                jobName="tutorialQA"
                 isLoading={showGenerating}
                 error={tutorial.jobError?.tutorialQA}
-                isRetrying={retryingJobs.qnas}
-                onRetry={() => handleRetry('qnas')}
+                isRetrying={retryingJobs.tutorialQA}
+                onRetry={() => handleRetry('tutorialQA')}
               >
                 <QuestionAndAnwsers quiz={tutorial.tutorialQA} />
               </TabContentWrapper>
