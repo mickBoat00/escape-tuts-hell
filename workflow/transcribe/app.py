@@ -128,7 +128,6 @@ def lambda_handler(event, context):
         update_data = {
             "jobStatus.transcription": "completed",
             "transcript.text": transcript_text,
-            "fileDuration": 0.409,
             "updatedAt": datetime.utcnow()
         }
 

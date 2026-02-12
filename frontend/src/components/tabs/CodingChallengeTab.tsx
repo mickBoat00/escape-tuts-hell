@@ -123,7 +123,7 @@ const CodingChallengeTab: React.FC<CodingChallengeTabProps> = ({ challenge }) =>
                       <p className="text-xs text-muted-foreground mb-1.5">
                         Command
                       </p>
-                      <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
+                      <pre className="bg-muted p-3 rounded text-xs overflow-x-auto  whitespace-pre-wrap break-words overflow-x-auto">
                         <code>{testCase.command}</code>
                       </pre>
                     </div>
@@ -132,7 +132,7 @@ const CodingChallengeTab: React.FC<CodingChallengeTabProps> = ({ challenge }) =>
                       <p className="text-xs text-muted-foreground mb-1.5">
                         Expected Output
                       </p>
-                      <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
+                      <pre className="bg-muted p-3 rounded text-xs overflow-x-auto  whitespace-pre-wrap break-words overflow-x-auto">
                         <code>{testCase.expected_output}</code>
                       </pre>
                     </div>

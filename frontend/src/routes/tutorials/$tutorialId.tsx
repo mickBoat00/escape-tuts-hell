@@ -13,6 +13,7 @@ import CodingChallengeTab from '@/components/tabs/CodingChallengeTab';
 import QuestionAndAnwsers from '@/components/tabs/QuestionAndAnwsers';
 import TabContentWrapper from '@/components/tabs/TabContentWrapper';
 import { toast } from 'react-toastify';
+import FollowAlongGuideTab from '@/components/FollowAlongGuideTab';
 
 export interface TabConfig {
   value: string;
@@ -260,7 +261,7 @@ function RouteComponent() {
                 isRetrying={retryingJobs.followAlongGuide}
                 onRetry={() => handleRetry('followAlongGuide')}
               >
-                <div>Follow along guide</div>
+                <FollowAlongGuideTab guide={tutorial.followAlongGuide} />
               </TabContentWrapper>
             </TabsContent>
 
@@ -299,7 +300,7 @@ function RouteComponent() {
                 isRetrying={retryingJobs.summary}
                 onRetry={() => handleRetry('summary')}
               >
-                <p>Summary here</p>
+                <p>{tutorial.summary?.text}</p>
               </TabContentWrapper>
             </TabsContent>
           </Tabs>

@@ -12,26 +12,13 @@ export type TutorialStatus =
   | "completed"
   | "failed";
 
-
-export type UploadStatus =
-  | "idle"
-  | "uploading"
-  | "processing"
-  | "completed"
-  | "error";
-
-export type UploadButtonState =
-  | "Start Upload"
-  | "Try Again";
-
-
 export interface JobStatus {
   transcription: JobState;
   codingTutorialCheck: JobState;
   tutorialQA: JobState;
   codingChallenge: JobState;
-  summary: JobState;
   followAlongGuide: JobState;
+  summary: JobState;
 }
 
 export interface JobError {
@@ -39,16 +26,15 @@ export interface JobError {
   codingTutorialCheck?: string | null;
   tutorialQA?: string | null;
   codingChallenge?: string | null;
-  summary?: string | null;
   followAlongGuide?: string | null;
+  summary?: string | null;
 }
 
 export interface ErrorInfo {
   message?: string | null;
   step?: string | null;
-  timestamp?: string | null; // ISO datetime
+  timestamp?: string | null;
 }
-
 
 export interface Transcript {
   text?: string | null;
@@ -59,27 +45,20 @@ export interface CodingTutorialCheck {
   reason: string;
 }
 
-
 export interface AnswerOption {
-  id: string; 
+  id: string;
   text: string;
 }
 
 export interface InterviewQuestion {
   question: string;
-  options: AnswerOption[]; 
+  options: AnswerOption[];
   correct_answer_ids: string[];
   transcript_evidence: string[];
 }
 
 export interface CodingInterviewQA {
-  questions: InterviewQuestion[]; 
-}
-
-
-export interface Requirement {
-  id: number;
-  description: string;
+  questions: InterviewQuestion[];
 }
 
 export interface TestCase {
@@ -89,12 +68,17 @@ export interface TestCase {
 }
 
 export interface StepContent {
-  step_number: number; // 0 = setup
+  step_number: number;
   title: string;
   goal: string;
   description: string;
   related_requirements: number[];
   test_cases: TestCase[];
+}
+
+export interface Requirement {
+  id: number;
+  description: string;
 }
 
 export interface Extension {
@@ -113,6 +97,44 @@ export interface CodingChallengeOutput {
   final_deliverable: string;
 }
 
+export interface Hint {
+  level: number;
+  text: string;
+}
+
+export interface Validation {
+  check: string;
+  expected: string[];
+}
+
+export interface GuideStep {
+  number: number;
+  what: string;
+  why: string;
+  how: string;
+  outcome?: string | null;
+  validation: Validation;
+  hints?: Hint[] | null;
+}
+
+export interface Milestone {
+  number: number;
+  title: string;
+  outcome: string;
+  steps: GuideStep[];
+}
+
+export interface FollowAlongGuide {
+  title: string;
+  summary: string;
+  before_you_start?: string[] | null;
+  milestones: Milestone[];
+  whats_next?: string[] | null;
+}
+
+export interface Summary {
+  text: string;
+}
 
 export interface Tutorial {
   _id?: string;
@@ -134,14 +156,13 @@ export interface Tutorial {
   codingTutorialCheck?: CodingTutorialCheck | null;
   tutorialQA?: CodingInterviewQA | null;
   codingChallenge?: CodingChallengeOutput | null;
-  followAlongGuide?: string | null;
+  followAlongGuide?: FollowAlongGuide | null;
+  summary?: Summary | null;
 
   createdAt: string;
   updatedAt?: string | null;
   completedAt?: string | null;
 }
-
-
 
 export interface FileDataRequest {
   fileName: string;
@@ -152,9 +173,19 @@ export interface FileDataRequest {
 
 export interface RetryRequest {
   tutorialId: string;
-  jobName: keyof JobStatus;
+  jobName: string;
 }
 
+export type UploadStatus =
+  | "idle"
+  | "uploading"
+  | "processing"
+  | "completed"
+  | "error";
+
+export type UploadButtonState =
+  | "Start Upload"
+  | "Try Again";
 
 
 export const FEATURES = {
