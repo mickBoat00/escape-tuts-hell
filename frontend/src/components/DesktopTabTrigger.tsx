@@ -1,13 +1,6 @@
-import type { Tutorial } from '@/lib/types';
+import type { TabConfig, Tutorial } from '@/lib/types';
 import { TabsTrigger } from '@radix-ui/react-tabs';
 import { AlertCircle } from 'lucide-react';
-
-export interface TabConfig {
-  value: string;
-  label: string;
-  errorKey?: string;
-//   feature?: FeatureName;
-}
 
 interface TabTriggerItemProps {
   tab: TabConfig;

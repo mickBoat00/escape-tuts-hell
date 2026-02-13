@@ -195,3 +195,11 @@ export const FEATURES = {
 
 export type FeatureType =
   typeof FEATURES[keyof typeof FEATURES];
+
+
+export interface TabConfig {
+  value: string;
+  label: string;
+  errorKey?: string;
+  feature?: string;
+}

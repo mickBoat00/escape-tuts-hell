@@ -14,6 +14,9 @@ import QuestionAndAnwsers from '@/components/tabs/QuestionAndAnwsers';
 import TabContentWrapper from '@/components/tabs/TabContentWrapper';
 import { toast } from 'react-toastify';
 import FollowAlongGuideTab from '@/components/FollowAlongGuideTab';
+import { Select } from '@/components/ui/select';
+import { SelectContent, SelectTrigger, SelectValue } from '@radix-ui/react-select';
+import MobileTabItem from '@/components/MobileTabItem';
 
 export interface TabConfig {
   value: string;
@@ -178,7 +181,7 @@ function RouteComponent() {
 
   const showGenerating = isProcessing && generationStatus === 'running';
 
-  const PROJECT_TABS: TabConfig[] = [
+  const TUTORIAL_TABS: TabConfig[] = [
     { value: 'followAlongGuide', label: 'Follow Along Guide' },
     { value: 'codingChallenge', label: 'Coding Challenge' },
     { value: 'tutorialQA', label: 'Question And Answers' },
@@ -240,9 +243,39 @@ function RouteComponent() {
 
         {(showGenerating || (isCompleted && isCodingTutorial)) && (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
+
+            <div className="glass-card rounded-2xl p-4 mb-6 lg:hidden">
+              <Select value={activeTab} onValueChange={setActiveTab}>
+                <SelectTrigger className="w-full px-4 py-3 rounded-xl gradient-emerald text-white font-semibold text-base border-none outline-none focus:ring-2 focus:ring-emerald-300 transition-all h-auto flex items-center justify-between">
+                  <SelectValue />
+                  <svg 
+                    className="h-5 w-5 ml-2 flex-shrink-0 transition-transform duration-200" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </SelectTrigger>
+                <SelectContent 
+                  className="z-[100] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden min-w-[250px] max-h-[300px] overflow-y-auto"
+                  position="popper"
+                  sideOffset={8}
+                >
+                  {TUTORIAL_TABS.map((tab) => (
+                    <MobileTabItem
+                      key={tab.label}
+                      tab={tab}
+                      tutorial={tutorial}
+                    />
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
             <div className="hidden lg:block mb-6">
               <TabsList className="flex gap-2">
-                {PROJECT_TABS.map(tab => (
+                {TUTORIAL_TABS.map(tab => (
                   <DesktopTabTrigger
                     key={tab.value}
                     tab={tab}
