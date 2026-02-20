@@ -63,67 +63,33 @@ def lambda_handler(event, context):
             }
         )
         
-        # aai.settings.api_key = ASSEMBLYAI_API_KEY
-        # transcriber = aai.Transcriber()
-        # transcript = transcriber.transcribe(input_url)
+        aai.settings.api_key = ASSEMBLYAI_API_KEY
+        transcriber = aai.Transcriber()
+        transcript = transcriber.transcribe(input_url)
         
-        # if transcript.status == aai.TranscriptStatus.error:
-        #     error_message = f"Transcription failed: {transcript.error}"
+        if transcript.status == aai.TranscriptStatus.error:
+            error_message = f"Transcription failed: {transcript.error}"
             
-        #     tutorials.update_one(
-        #         {"_id": ObjectId(tutorial_id)},
-        #         {
-        #             "$set": {
-        #                 "status": "failed",
-        #                 "jobStatus.transcription": "failed",
-        #                 "error": {
-        #                     "step": "transcription",
-        #                     "message": transcript.error,
-        #                     "timestamp": datetime.utcnow()
-        #                 },
-        #                 "updatedAt": datetime.utcnow()
-        #             }
-        #         }
-        #     )
+            tutorials.update_one(
+                {"_id": ObjectId(tutorial_id)},
+                {
+                    "$set": {
+                        "status": "failed",
+                        "jobStatus.transcription": "failed",
+                        "error": {
+                            "step": "transcription",
+                            "message": transcript.error,
+                            "timestamp": datetime.utcnow()
+                        },
+                        "updatedAt": datetime.utcnow()
+                    }
+                }
+            )
             
-        #     # RAISE EXCEPTION to fail the Step Function
-        #     raise Exception(error_message)
+            # RAISE EXCEPTION to fail the Step Function
+            raise Exception(error_message)
 
-        # transcript_text = transcript.text
-
-        # update_data = {
-        #     "jobStatus.transcription": "completed",
-        #     "transcript.text": transcript_text,
-        #     "updatedAt": datetime.utcnow()
-        # }
-        
-        # # Add audio duration if available
-        # if transcript.audio_duration:
-        #     update_data["fileDuration"] = transcript.audio_duration / 1000.0
-        
-        time.sleep(10)
-
-        # 3. Fetch the first tutorial that already has a transcript
-        source_tutorial = tutorials.find_one(
-            {
-                "transcript": {"$exists": True, "$ne": None}
-            },
-            sort=[("createdAt", 1)]
-        )
-
-        if not source_tutorial:
-            raise Exception("No existing transcript found to simulate transcription")
-
-        # 4. Extract transcript text (handle both shapes safely)
-        transcript_data = source_tutorial.get("transcript")
-
-        if isinstance(transcript_data, dict):
-            transcript_text = transcript_data.get("text")
-        else:
-            transcript_text = transcript_data
-
-        if not transcript_text:
-            raise Exception("Source tutorial transcript is empty")
+        transcript_text = transcript.text
 
         update_data = {
             "jobStatus.transcription": "completed",
