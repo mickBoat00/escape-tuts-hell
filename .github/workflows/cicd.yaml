@@ -122,64 +122,64 @@ jobs:
       working-directory: ./infra
 
     # Get Terraform outputs
-    - name: Get Terraform Outputs
-      id: terraform-outputs
-      run: |
-        cd infra
-        API_URL=$(terraform output -raw api_base_url)
-        BUCKET_NAME=$(terraform output -raw frontend_bucket_name)
-        DISTRIBUTION_ID=$(terraform output -raw cloudfront_distribution_id)
+    # - name: Get Terraform Outputs
+    #   id: terraform-outputs
+    #   run: |
+    #     cd infra
+    #     API_URL=$(terraform output -raw api_base_url)
+    #     BUCKET_NAME=$(terraform output -raw frontend_bucket_name)
+    #     DISTRIBUTION_ID=$(terraform output -raw cloudfront_distribution_id)
         
-        echo "api_url=${API_URL}" >> $GITHUB_OUTPUT
-        echo "bucket_name=${BUCKET_NAME}" >> $GITHUB_OUTPUT
-        echo "distribution_id=${DISTRIBUTION_ID}" >> $GITHUB_OUTPUT
+    #     echo "api_url=${API_URL}" >> $GITHUB_OUTPUT
+    #     echo "bucket_name=${BUCKET_NAME}" >> $GITHUB_OUTPUT
+    #     echo "distribution_id=${DISTRIBUTION_ID}" >> $GITHUB_OUTPUT
         
-        echo "API URL: ${API_URL}"
-        echo "Bucket: ${BUCKET_NAME}"
-        echo "Distribution: ${DISTRIBUTION_ID}"
+    #     echo "API URL: ${API_URL}"
+    #     echo "Bucket: ${BUCKET_NAME}"
+    #     echo "Distribution: ${DISTRIBUTION_ID}"
 
-    # Build and deploy frontend
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
+    # # Build and deploy frontend
+    # - name: Setup Node.js
+    #   uses: actions/setup-node@v4
+    #   with:
+    #     node-version: '20'
+    #     cache: 'npm'
+    #     cache-dependency-path: frontend/package-lock.json
 
-    - name: Install Frontend Dependencies
-      run: |
-        cd frontend
-        npm ci
+    # - name: Install Frontend Dependencies
+    #   run: |
+    #     cd frontend
+    #     npm ci
 
-    - name: Build Frontend
-      env:
-        VITE_API_BASE_URL: ${{ steps.terraform-outputs.outputs.api_url }}
-      run: |
-        cd frontend
-        npm run build
-        echo "Frontend built with API URL: $VITE_API_BASE_URL"
+    # - name: Build Frontend
+    #   env:
+    #     VITE_API_BASE_URL: ${{ steps.terraform-outputs.outputs.api_url }}
+    #   run: |
+    #     cd frontend
+    #     npm run build
+    #     echo "Frontend built with API URL: $VITE_API_BASE_URL"
 
-    - name: Deploy to S3
-      run: |
-        # Sync all files except index.html with long cache
-        aws s3 sync frontend/dist s3://${{ steps.terraform-outputs.outputs.bucket_name }} \
-          --delete \
-          --cache-control "public, max-age=31536000, immutable" \
-          --exclude "index.html"
+    # - name: Deploy to S3
+    #   run: |
+    #     # Sync all files except index.html with long cache
+    #     aws s3 sync frontend/dist s3://${{ steps.terraform-outputs.outputs.bucket_name }} \
+    #       --delete \
+    #       --cache-control "public, max-age=31536000, immutable" \
+    #       --exclude "index.html"
         
-        # Upload index.html with no cache
-        aws s3 cp frontend/dist/index.html \
-          s3://${{ steps.terraform-outputs.outputs.bucket_name }}/index.html \
-          --cache-control "public, max-age=0, must-revalidate"
+    #     # Upload index.html with no cache
+    #     aws s3 cp frontend/dist/index.html \
+    #       s3://${{ steps.terraform-outputs.outputs.bucket_name }}/index.html \
+    #       --cache-control "public, max-age=0, must-revalidate"
 
-    - name: Invalidate CloudFront Cache
-      run: |
-        aws cloudfront create-invalidation \
-          --distribution-id ${{ steps.terraform-outputs.outputs.distribution_id }} \
-          --paths "/*"
+    # - name: Invalidate CloudFront Cache
+    #   run: |
+    #     aws cloudfront create-invalidation \
+    #       --distribution-id ${{ steps.terraform-outputs.outputs.distribution_id }} \
+    #       --paths "/*"
 
-    - name: Deployment Summary
-      run: |
-        echo "🚀 Deployment Complete!"
-        echo "📦 Backend API: ${{ steps.terraform-outputs.outputs.api_url }}"
-        echo "🌐 Frontend URL: Check Terraform outputs for CloudFront URL"
+    # - name: Deployment Summary
+    #   run: |
+    #     echo "🚀 Deployment Complete!"
+    #     echo "📦 Backend API: ${{ steps.terraform-outputs.outputs.api_url }}"
+    #     echo "🌐 Frontend URL: Check Terraform outputs for CloudFront URL"
